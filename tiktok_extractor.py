@@ -7,7 +7,7 @@ import logging
 import re
 import requests
 import random
-import cv2
+#import cv2
 from urllib.request import urlretrieve
 from datetime import datetime
 from selenium.webdriver.common.action_chains import ActionChains
