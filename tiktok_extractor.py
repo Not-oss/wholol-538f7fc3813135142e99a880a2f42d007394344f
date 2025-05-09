@@ -91,18 +91,10 @@ class TikTokExtractor:
         
         logger.info("Initialisation du navigateur Chrome en mode incognito...")
         
-        # Détecter le système d'exploitation
-        import platform
-        os_name = platform.system().lower()
-        
-        # Chemin personnalisé pour Ubuntu
-        if 'linux' in os_name and 'ubuntu' in platform.platform().lower():
-            driver_path = "/home/ubuntu/.local/share/undetected_chromedriver/undetected_adem"
-            logger.info(f"OS Ubuntu détecté, utilisation du chemin personnalisé: {driver_path}")
-            self.driver = uc.Chrome(options=options, driver_executable_path=driver_path, port=7777)
-        else:
-            # Configuration standard pour les autres OS
-            self.driver = uc.Chrome(options=options, port=7777)
+        # Utiliser directement le chemin Ubuntu sans détection d'OS
+        driver_path = "/home/ubuntu/.local/share/undetected_chromedriver/undetected_adem"
+        logger.info(f"Utilisation du chemin chromedriver: {driver_path}")
+        self.driver = uc.Chrome(options=options, driver_executable_path=driver_path, port=7777)
         
         self.driver.maximize_window()
     
