@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scanner le QR Code - Qui a Liké ?</title>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.4.19/dist/full.min.css" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #fe2c55 0%, #25f4ee 100%);
+            min-height: 100vh;
+        }
+        .tiktok-shadow {
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+        .tiktok-gradient {
+            background: linear-gradient(90deg, #fe2c55 0%, #69c9d0 100%);
+        }
+        .qr-container {
+            padding: 16px;
+            background-color: white;
+            border-radius: 12px;
+        }
+        .qr-code {
+            width: 240px;
+            height: 240px;
+            margin: 0 auto;
+        }
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(254, 44, 85, 0.7);
+            }
+            70% {
+                transform: scale(1);
+                box-shadow: 0 0 0 10px rgba(254, 44, 85, 0);
+            }
+            100% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(254, 44, 85, 0);
+            }
+        }
+    </style>
+</head>
+<body class="flex flex-col items-center justify-center">
+    <div class="container max-w-md mx-auto p-6 bg-white rounded-3xl tiktok-shadow my-10">
+        <div class="text-center">
+            <h1 class="text-4xl font-bold mb-2 text-transparent bg-clip-text tiktok-gradient">Scanner le QR Code</h1>
+            <p class="text-gray-600 mb-8">Utilisez l'application TikTok pour scanner ce QR code</p>
+            
+            <div class="flex flex-col items-center space-y-6">
+                <div id="qr-container" class="qr-container pulse">
+                    <img src="/static/uploads/tiktok_qr.png" alt="QR Code TikTok" class="qr-code">
+                </div>
+                
+                <div class="steps steps-vertical">
+                    <div class="step step-primary">Ouvrez l'application TikTok</div>
+                    <div class="step step-primary">Scannez ce QR code</div>
+                    <div class="step step-primary">Confirmez la connexion</div>
+                </div>
+                
+                <div class="alert alert-warning">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                    <span>Ne partagez pas ce QR code avec d'autres personnes.</span>
+                </div>
+            </div>
+            
+            <div class="mt-8">
+                <div class="loading loading-spinner loading-lg text-[#fe2c55]"></div>
+                <p class="text-gray-600 mt-2" id="status-message">En attente de connexion...</p>
+                <div id="qr-status"></div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Modification du script JS pour rediriger vers la page de chargement lorsque le statut 'extracting' est reçu
+
+        // Trouver le code actuel de gestion de la réponse
+        function checkLoginStatus() {
+            fetch('/check_login_status')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        // Connexion réussie
+                        document.getElementById('qr-container').innerHTML = `
+                            <div class="alert alert-success">
+                                <div class="flex-1">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="w-6 h-6 mx-2 stroke-current">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                    </svg>
+                                    <label>Connexion réussie! Bienvenue ${data.user.display_name || data.user.username}</label>
+                                </div>
+                            </div>
+                            <img src="${data.user.avatar_url}" class="w-24 h-24 rounded-full mx-auto my-4" alt="Profile Avatar">
+                        `;
+                        
+                        // Rediriger vers le tableau de bord après 2 secondes
+                        setTimeout(() => {
+                            window.location.href = '/dashboard';
+                        }, 2000);
+                        
+                        clearInterval(checkInterval);
+                    } else if (data.status === 'extracting') {
+                        // En cours d'extraction pour un nouvel utilisateur
+                        document.getElementById('qr-container').innerHTML = `
+                            <div class="alert alert-info">
+                                <div class="flex-1">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="w-6 h-6 mx-2 stroke-current">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                    <label>Première connexion! Nous allons extraire vos vidéos likées...</label>
+                                </div>
+                            </div>
+                            <div class="flex justify-center mt-4">
+                                <button class="btn btn-primary loading">Préparation en cours</button>
+                            </div>
+                        `;
+                        
+                        // Rediriger vers la page de chargement après 2 secondes
+                        setTimeout(() => {
+                            window.location.href = '/loading';
+                        }, 2000);
+                        
+                        clearInterval(checkInterval);
+                    } else if (data.status === 'error') {
+                        document.getElementById('qr-status').innerHTML = `
+                            <div class="alert alert-error">
+                                <div class="flex-1">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="w-6 h-6 mx-2 stroke-current">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path>
+                                    </svg>
+                                    <label>Erreur: ${data.message}</label>
+                                </div>
+                            </div>
+                        `;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error checking login status:', error);
+                });
+        }
+        
+        // Démarrer la vérification après le chargement de la page
+        let checkInterval; // Variable pour stocker l'intervalle
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // Première vérification après un délai initial
+            setTimeout(() => {
+                checkLoginStatus();
+                
+                // Ensuite, vérifier périodiquement
+                checkInterval = setInterval(checkLoginStatus, 3000);
+            }, 2000);
+        });
+    </script>
+</body>
+</html> 

@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Qui a Liké ? - Le jeu social TikTok</title>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.4.19/dist/full.min.css" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #fe2c55 0%, #25f4ee 100%);
+            min-height: 100vh;
+        }
+        .tiktok-shadow {
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+        .tiktok-gradient {
+            background: linear-gradient(90deg, #fe2c55 0%, #69c9d0 100%);
+        }
+        .tiktok-button {
+            background: linear-gradient(90deg, #fe2c55 0%, #25f4ee 100%);
+            transition: all 0.3s ease;
+        }
+        .tiktok-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+    </style>
+</head>
+<body class="flex flex-col items-center justify-center">
+    <div class="container max-w-md mx-auto p-6 bg-white rounded-3xl tiktok-shadow my-10">
+        <div class="text-center">
+            <h1 class="text-4xl font-bold mb-2 text-transparent bg-clip-text tiktok-gradient">Qui a Liké ?</h1>
+            <p class="text-gray-600 mb-8">Le jeu social basé sur vos likes TikTok</p>
+            
+            <div class="flex flex-col space-y-4">
+                <a href="{{ url_for('login') }}" class="btn tiktok-button text-white font-bold py-3 px-6 rounded-full">
+                    Se connecter avec TikTok
+                </a>
+                
+                <div class="divider">OU</div>
+                
+                <div class="flex flex-col space-y-4">
+                    <a href="{{ url_for('join_game') }}" class="btn btn-outline border-2 border-[#fe2c55] text-[#fe2c55] hover:bg-[#fe2c55] hover:text-white font-bold py-3 px-6 rounded-full">
+                        Rejoindre une partie
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="mt-12 text-center">
+            <h2 class="text-2xl font-bold mb-4">Comment ça marche ?</h2>
+            <div class="steps steps-vertical">
+                <div class="step step-primary">Connectez-vous avec TikTok</div>
+                <div class="step step-primary">Créez une partie ou rejoignez-en une</div>
+                <div class="step step-primary">Invitez vos amis avec le code</div>
+                <div class="step step-primary">Devinez qui a liké les vidéos</div>
+                <div class="step step-primary">Gagnez des points et amusez-vous !</div>
+            </div>
+        </div>
+        
+        <div class="mt-10 text-center text-gray-500 text-sm">
+            <p>Qui a Liké ? n'est pas affilié à TikTok.</p>
+            <p>© 2023 Qui a Liké ? - Tous droits réservés</p>
+        </div>
+    </div>
+</body>
+</html> 

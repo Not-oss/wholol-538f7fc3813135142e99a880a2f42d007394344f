@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Extraction en cours - Qui a Liké ?</title>
+    <!-- TailwindCSS & DaisyUI -->
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@2.6.0/dist/full.css" rel="stylesheet" type="text/css" />
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2/dist/tailwind.min.css" rel="stylesheet" type="text/css" />
+    <!-- Socket.IO -->
+    <script src="https://cdn.socket.io/4.5.0/socket.io.min.js"></script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #6366F1 0%, #EC4899 100%);
+            min-height: 100vh;
+        }
+        .loading-container {
+            max-width: 500px;
+            border-radius: 1rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+        .step-complete {
+            color: #10B981;
+        }
+        .step-active {
+            color: #3B82F6;
+            font-weight: bold;
+        }
+        .step-pending {
+            color: #9CA3AF;
+        }
+        .step-error {
+            color: #EF4444;
+        }
+    </style>
+</head>
+<body>
+    <div class="flex justify-center items-center min-h-screen p-4">
+        <div class="loading-container bg-white p-6 w-full">
+            <h2 class="text-2xl font-bold text-center mb-4">Extraction des vidéos</h2>
+            <p class="text-center mb-6">Connexion au compte TikTok de <span class="font-semibold">@{{ username }}</span> en cours...</p>
+            
+            <!-- Barre de progression -->
+            <div class="w-full bg-gray-200 rounded-full h-4 mb-6">
+                <div id="progress-bar" class="bg-gradient-to-r from-indigo-500 to-pink-500 h-4 rounded-full" style="width: 0%"></div>
+            </div>
+            
+            <!-- Message d'état -->
+            <div id="status-message" class="text-center font-medium mb-4">
+                Initialisation...
+            </div>
+            
+            <!-- Étapes du processus -->
+            <div class="steps-container space-y-2 mb-6">
+                <div id="step-profile" class="step flex items-center">
+                    <span class="step-icon mr-2 step-pending">⭘</span>
+                    <span class="step-text">Accès au profil TikTok</span>
+                </div>
+                <div id="step-navigation" class="step flex items-center">
+                    <span class="step-icon mr-2 step-pending">⭘</span>
+                    <span class="step-text">Navigation vers votre profil</span>
+                </div>
+                <div id="step-captcha" class="step flex items-center">
+                    <span class="step-icon mr-2 step-pending">⭘</span>
+                    <span class="step-text">Vérification des captchas</span>
+                </div>
+                <div id="step-liked-tab" class="step flex items-center">
+                    <span class="step-icon mr-2 step-pending">⭘</span>
+                    <span class="step-text">Recherche de l'onglet "Liked"</span>
+                </div>
+                <div id="step-videos" class="step flex items-center">
+                    <span class="step-icon mr-2 step-pending">⭘</span>
+                    <span class="step-text">Extraction des vidéos likées</span>
+                </div>
+                <div id="step-processing" class="step flex items-center">
+                    <span class="step-icon mr-2 step-pending">⭘</span>
+                    <span class="step-text">Traitement des vidéos</span>
+                </div>
+            </div>
+            
+            <!-- Message d'erreur -->
+            <div id="error-container" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+                <p id="error-message"></p>
+            </div>
+            
+            <!-- Boutons -->
+            <div class="text-center">
+                <button id="start-extraction" class="btn btn-primary">Démarrer l'extraction</button>
+                <button id="retry-button" class="btn btn-primary hidden">Réessayer</button>
+                <button id="dashboard-button" class="btn btn-success hidden">Aller au tableau de bord</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Éléments du DOM
+            const progressBar = document.getElementById('progress-bar');
+            const statusMessage = document.getElementById('status-message');
+            const errorContainer = document.getElementById('error-container');
+            const errorMessage = document.getElementById('error-message');
+            const startButton = document.getElementById('start-extraction');
+            const retryButton = document.getElementById('retry-button');
+            const dashboardButton = document.getElementById('dashboard-button');
+            
+            // Étapes
+            const steps = {
+                'profile_access': document.getElementById('step-profile'),
+                'profile_navigation': document.getElementById('step-navigation'),
+                'captcha_check': document.getElementById('step-captcha'),
+                'finding_liked_tab': document.getElementById('step-liked-tab'),
+                'extracting_videos': document.getElementById('step-videos'),
+                'processing_videos': document.getElementById('step-processing')
+            };
+            
+            // Gestion des icônes d'état
+            function updateStepStatus(step, status) {
+                const allSteps = Object.values(steps);
+                
+                // Réinitialiser toutes les étapes si on redémarre
+                if (step === 'profile_access' && status === 'active') {
+                    allSteps.forEach(stepEl => {
+                        stepEl.querySelector('.step-icon').className = 'step-icon mr-2 step-pending';
+                        stepEl.querySelector('.step-icon').textContent = '⭘';
+                    });
+                }
+                
+                if (!steps[step]) return;
+                
+                const stepIcon = steps[step].querySelector('.step-icon');
+                const stepText = steps[step].querySelector('.step-text');
+                
+                // Mettre à jour l'icône et la classe en fonction du statut
+                switch (status) {
+                    case 'active':
+                        stepIcon.className = 'step-icon mr-2 step-active';
+                        stepIcon.textContent = '◉';
+                        stepText.className = 'step-text font-semibold';
+                        break;
+                    case 'complete':
+                        stepIcon.className = 'step-icon mr-2 step-complete';
+                        stepIcon.textContent = '✓';
+                        stepText.className = 'step-text';
+                        break;
+                    case 'error':
+                        stepIcon.className = 'step-icon mr-2 step-error';
+                        stepIcon.textContent = '✗';
+                        stepText.className = 'step-text';
+                        break;
+                    default:
+                        stepIcon.className = 'step-icon mr-2 step-pending';
+                        stepIcon.textContent = '⭘';
+                        stepText.className = 'step-text';
+                }
+            }
+            
+            // Fonction pour démarrer l'extraction
+            function startExtraction() {
+                // Cacher le bouton de démarrage
+                startButton.classList.add('hidden');
+                
+                // Réinitialiser les erreurs
+                errorContainer.classList.add('hidden');
+                
+                // Mettre à jour le message de statut
+                statusMessage.textContent = 'Démarrage de l\'extraction...';
+                progressBar.style.width = '10%';
+                
+                // Mettre à jour l'étape active
+                updateStepStatus('profile_access', 'active');
+                
+                // Faire la requête pour démarrer l'extraction
+                fetch('/extract_progress')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'error') {
+                            showError(data.message);
+                            updateStepStatus('profile_access', 'error');
+                        } else if (data.status === 'success') {
+                            // Extraction réussie
+                            // Mettre à jour la barre de progression
+                            progressBar.style.width = '100%';
+                            
+                            // Mettre à jour le message de statut
+                            statusMessage.textContent = data.message;
+                            
+                            // Marquer toutes les étapes comme complètes
+                            Object.keys(steps).forEach(step => {
+                                if (step !== 'initialization') {
+                                    updateStepStatus(step, 'complete');
+                                }
+                            });
+                            
+                            // Afficher le bouton pour accéder au tableau de bord
+                            dashboardButton.classList.remove('hidden');
+                            
+                            // Rediriger automatiquement après 3 secondes
+                            setTimeout(function() {
+                                window.location.href = data.redirect || '/dashboard';
+                            }, 3000);
+                        }
+                    })
+                    .catch(error => {
+                        showError('Erreur lors du démarrage de l\'extraction: ' + error);
+                    });
+            }
+            
+            // Démarrer l'extraction quand on clique sur le bouton
+            startButton.addEventListener('click', startExtraction);
+            
+            // Afficher une erreur
+            function showError(message) {
+                errorMessage.textContent = message;
+                errorContainer.classList.remove('hidden');
+                retryButton.classList.remove('hidden');
+            }
+            
+            // Réessayer l'extraction
+            retryButton.addEventListener('click', function() {
+                retryButton.classList.add('hidden');
+                errorContainer.classList.add('hidden');
+                progressBar.style.width = '0%';
+                startExtraction();
+            });
+            
+            // Aller au tableau de bord
+            dashboardButton.addEventListener('click', function() {
+                window.location.href = '/dashboard';
+            });
+            
+            // Démarrer automatiquement l'extraction dès le chargement de la page
+            setTimeout(startExtraction, 1000);
+        });
+    </script>
+</body>
+</html> 

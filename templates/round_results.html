@@ -1,0 +1,367 @@
+{% extends 'base.html' %}
+
+{% block title %}Qui a Liké? - Résultats du tour{% endblock %}
+
+{% block head %}
+<style>
+    .player-card {
+        transition: all 0.3s ease;
+        background-color: var(--ios-dark-elevated);
+        border-radius: 16px;
+    }
+    
+    .video-container {
+        position: relative;
+        width: 100%;
+        max-width: 400px;
+        margin: 0 auto;
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+    }
+    
+    .video-container video {
+        width: 100%;
+        display: block;
+        background-color: var(--ios-dark-elevated);
+    }
+    
+    .vote-card {
+        border-radius: 12px;
+        transition: all 0.3s ease;
+    }
+    
+    .vote-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .countdown {
+        font-family: 'Courier New', monospace;
+        font-size: 2rem;
+        font-weight: bold;
+        color: var(--tiktok-red);
+    }
+    
+    .confetti {
+        position: absolute;
+        width: 10px;
+        height: 10px;
+        transform: rotate(45deg);
+        animation: confetti-fall 3s ease-in-out infinite, confetti-shake 2s ease-in-out infinite;
+    }
+    
+    @keyframes confetti-fall {
+        0% {
+            top: -100px;
+            opacity: 1;
+        }
+        100% {
+            top: 100vh;
+            opacity: 0;
+        }
+    }
+    
+    @keyframes confetti-shake {
+        0% {
+            margin-left: 0;
+        }
+        50% {
+            margin-left: 50px;
+        }
+        100% {
+            margin-left: 0;
+        }
+    }
+    
+    .result-indicator {
+        padding: 8px 16px;
+        border-radius: 50px;
+        font-weight: bold;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .result-indicator.correct {
+        background-color: rgba(var(--ios-green-rgb), 0.2);
+        color: var(--ios-green);
+    }
+    
+    .result-indicator.incorrect {
+        background-color: rgba(var(--ios-red-rgb), 0.2);
+        color: var(--ios-red);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="max-w-4xl mx-auto ios-fade">
+        <div class="ios-card bg-ios-dark-card p-6 mb-6 ios-scale shadow-lg">
+            <div class="flex flex-col md:flex-row justify-between items-center mb-8">
+                <div class="text-center md:text-left mb-4 md:mb-0">
+                    <h1 class="text-3xl font-bold mb-2 bg-gradient-to-r from-tiktok-red to-tiktok-blue bg-clip-text text-transparent">Résultats du tour</h1>
+                    <p class="text-ios-gray">Tour {{ round.round_number }}/{{ game.max_rounds }}</p>
+                </div>
+                
+                {% if current_user.id == game.creator_id %}
+                <div class="flex gap-2">
+                    <button id="next-round-btn" class="tiktok-button px-4 py-2 gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+                        </svg>
+                        Tour suivant
+                    </button>
+                </div>
+                {% else %}
+                <div class="flex items-center gap-2">
+                    <span class="loading loading-spinner loading-md text-tiktok-red"></span>
+                    <span>En attente du créateur...</span>
+                </div>
+                {% endif %}
+            </div>
+            
+            <div class="mb-8 text-center">
+                <div id="countdown-container" class="flex flex-col items-center justify-center mb-6">
+                    <p class="text-ios-gray mb-2">Prochain tour dans</p>
+                    <div class="countdown" id="countdown">10</div>
+                </div>
+            </div>
+            
+            <div class="divider text-ios-gray before:bg-ios-gray/20 after:bg-ios-gray/20">La vidéo</div>
+            
+            <div class="flex flex-col items-center mb-8">
+                <div class="video-container mb-6">
+                    <video controls autoplay loop muted class="w-full">
+                        <source src="{{ video.download_url }}" type="video/mp4">
+                        Votre navigateur ne supporte pas la lecture de vidéos.
+                    </video>
+                </div>
+                
+                <p class="text-center mb-4">
+                    Cette vidéo a été likée par 
+                    <span class="font-bold text-tiktok-red">
+                        {% if round.video_owner.joker_used %}
+                            Anonyme (like caché)
+                        {% else %}
+                            {{ round.video_owner.user.display_name }}
+                        {% endif %}
+                    </span>
+                </p>
+                
+                <div class="text-center mb-6">
+                    <a href="{{ video.url }}" target="_blank" class="btn btn-outline btn-sm gap-2 text-tiktok-red hover:bg-tiktok-red hover:text-white">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                        </svg>
+                        Voir sur TikTok
+                    </a>
+                </div>
+            </div>
+            
+            <div class="divider text-ios-gray before:bg-ios-gray/20 after:bg-ios-gray/20">Votre vote</div>
+            
+            {% if current_vote %}
+                <div class="flex flex-col items-center mb-8">
+                    <div class="result-indicator mb-4 {% if current_vote.is_correct %}correct{% else %}incorrect{% endif %}">
+                        {% if current_vote.is_correct %}
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                            </svg>
+                            Bonne réponse !
+                        {% else %}
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                            Mauvaise réponse
+                        {% endif %}
+                    </div>
+                    
+                    <div class="flex flex-col sm:flex-row items-center gap-4">
+                        <div class="player-card p-4 text-center">
+                            <div class="avatar mb-3">
+                                <div class="w-16 h-16 rounded-full mx-auto ring ring-ios-gray ring-offset-2 ring-offset-ios-dark-elevated">
+                                    <img src="{{ current_vote.voted_user.avatar_url or 'https://via.placeholder.com/100' }}" alt="Avatar" class="object-cover" />
+                                </div>
+                            </div>
+                            <div>
+                                <p class="font-bold">{{ current_vote.voted_user.display_name }}</p>
+                                <p class="text-xs text-ios-gray">Votre vote</p>
+                            </div>
+                        </div>
+                        
+                        <div class="text-4xl">→</div>
+                        
+                        <div class="player-card p-4 text-center">
+                            <div class="avatar mb-3">
+                                <div class="w-16 h-16 rounded-full mx-auto ring ring-tiktok-red ring-offset-2 ring-offset-ios-dark-elevated">
+                                    <img src="{{ round.video_owner.user.avatar_url or 'https://via.placeholder.com/100' }}" alt="Avatar" class="object-cover" />
+                                </div>
+                            </div>
+                            <div>
+                                <p class="font-bold">
+                                    {% if round.video_owner.joker_used %}
+                                        Anonyme
+                                    {% else %}
+                                        {{ round.video_owner.user.display_name }}
+                                    {% endif %}
+                                </p>
+                                <p class="text-xs text-ios-gray">Bonne réponse</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+            
+            <div class="divider text-ios-gray before:bg-ios-gray/20 after:bg-ios-gray/20">Tous les votes</div>
+            
+            <div class="overflow-x-auto">
+                <table class="table table-compact w-full">
+                    <thead>
+                        <tr>
+                            <th>Joueur</th>
+                            <th>A voté pour</th>
+                            <th>Résultat</th>
+                            <th>Points</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for vote in votes %}
+                            <tr>
+                                <td>
+                                    <div class="flex items-center gap-3">
+                                        <div class="avatar">
+                                            <div class="mask mask-squircle w-8 h-8">
+                                                <img src="{{ vote.user.avatar_url or 'https://via.placeholder.com/100' }}" alt="Avatar" />
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <div class="font-bold">{{ vote.user.display_name }}</div>
+                                            <div class="text-xs opacity-50">@{{ vote.user.tiktok_username }}</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="flex items-center gap-3">
+                                        <div class="avatar">
+                                            <div class="mask mask-squircle w-8 h-8">
+                                                <img src="{{ vote.voted_user.avatar_url or 'https://via.placeholder.com/100' }}" alt="Avatar" />
+                                            </div>
+                                        </div>
+                                        <div class="font-bold">{{ vote.voted_user.display_name }}</div>
+                                    </div>
+                                </td>
+                                <td>
+                                    {% if vote.is_correct %}
+                                        <div class="badge badge-success gap-2">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                            </svg>
+                                            Correct
+                                        </div>
+                                    {% else %}
+                                        <div class="badge badge-error gap-2">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                            </svg>
+                                            Incorrect
+                                        </div>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="font-bold {% if vote.is_correct %}text-ios-green{% else %}text-ios-gray{% endif %}">
+                                        {% if vote.is_correct %}+1{% else %}+0{% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Socket.io
+        const socket = io();
+        
+        // Rejoindre la salle
+        socket.emit('join', { game_code: '{{ game.code }}' });
+        
+        // Écouter les événements
+        socket.on('next_round', function(data) {
+            if (data.game_code === '{{ game.code }}') {
+                // Rediriger vers le prochain tour
+                window.location.href = '/play_game/{{ game.code }}';
+            }
+        });
+        
+        // Créer des confettis pour les bonnes réponses
+        {% if current_vote and current_vote.is_correct %}
+            createConfetti();
+        {% endif %}
+        
+        // Gestion du bouton pour passer au tour suivant
+        const nextRoundBtn = document.getElementById('next-round-btn');
+        if (nextRoundBtn) {
+            nextRoundBtn.addEventListener('click', function() {
+                // Désactiver le bouton
+                this.disabled = true;
+                this.innerHTML = `
+                    <span class="loading loading-spinner loading-sm"></span>
+                    Chargement...
+                `;
+                
+                // Émettre un événement pour passer au tour suivant
+                socket.emit('start_next_round', { game_code: '{{ game.code }}' });
+            });
+        }
+        
+        // Compte à rebours
+        const countdown = document.getElementById('countdown');
+        let timeLeft = 10;
+        
+        const timer = setInterval(function() {
+            timeLeft--;
+            countdown.textContent = timeLeft;
+            
+            if (timeLeft <= 0) {
+                clearInterval(timer);
+                
+                // Si le créateur n'a pas cliqué sur le bouton, émettre l'événement
+                {% if current_user.id == game.creator_id %}
+                    if (!nextRoundBtn.disabled) {
+                        socket.emit('start_next_round', { game_code: '{{ game.code }}' });
+                    }
+                {% endif %}
+            }
+        }, 1000);
+    });
+    
+    // Fonction pour créer des confettis
+    function createConfetti() {
+        const colors = ['#fe2c55', '#25f4ee', '#fef601', '#22ddff', '#ff2986'];
+        const confettiCount = 50;
+        
+        for (let i = 0; i < confettiCount; i++) {
+            const confetti = document.createElement('div');
+            confetti.className = 'confetti';
+            confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+            confetti.style.left = Math.random() * 100 + 'vw';
+            confetti.style.animationDelay = Math.random() * 3 + 's';
+            confetti.style.animationDuration = (Math.random() * 2 + 2) + 's';
+            
+            document.body.appendChild(confetti);
+            
+            // Remove after animation completes
+            setTimeout(() => {
+                document.body.removeChild(confetti);
+            }, 5000);
+        }
+    }
+</script>
+{% endblock %} 

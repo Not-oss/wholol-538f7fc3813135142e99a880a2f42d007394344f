@@ -1,0 +1,473 @@
+{% extends 'base.html' %}
+
+{% block title %}Qui a Liké? - Salle d'attente{% endblock %}
+
+{% block head %}
+<style>
+    .player-container {
+        transition: all 0.3s ease;
+    }
+    
+    .player-card {
+        background-color: var(--ios-dark-elevated);
+        border-radius: 16px;
+        transition: all 0.3s ease;
+    }
+    
+    .player-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .game-code {
+        font-family: 'Courier New', monospace;
+        letter-spacing: 0.5rem;
+        font-size: 2.5rem;
+        color: var(--tiktok-red);
+    }
+    
+    .confetti {
+        position: absolute;
+        width: 10px;
+        height: 10px;
+        transform: rotate(45deg);
+        animation: confetti-fall 3s ease-in-out infinite, confetti-shake 2s ease-in-out infinite;
+    }
+    
+    @keyframes confetti-fall {
+        0% {
+            top: -100px;
+            opacity: 1;
+        }
+        100% {
+            top: 100vh;
+            opacity: 0;
+        }
+    }
+    
+    @keyframes confetti-shake {
+        0% {
+            margin-left: 0;
+        }
+        50% {
+            margin-left: 50px;
+        }
+        100% {
+            margin-left: 0;
+        }
+    }
+    
+    #toast-container {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 9999;
+    }
+    
+    .toast {
+        background-color: var(--ios-dark-elevated);
+        color: white;
+        border-radius: 8px;
+        padding: 16px;
+        margin-bottom: 10px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        display: flex;
+        align-items: center;
+        overflow: hidden;
+        animation: toast-slide-in 0.3s ease-out forwards;
+        max-width: 350px;
+    }
+    
+    .toast.toast-success {
+        border-left: 4px solid var(--ios-green);
+    }
+    
+    .toast-icon {
+        margin-right: 12px;
+        font-size: 24px;
+    }
+    
+    .toast-content {
+        flex: 1;
+    }
+    
+    .toast-title {
+        font-weight: bold;
+        margin-bottom: 4px;
+    }
+    
+    .toast-message {
+        font-size: 14px;
+        opacity: 0.9;
+    }
+    
+    @keyframes toast-slide-in {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+    
+    @keyframes toast-slide-out {
+        from {
+            transform: translateX(0);
+            opacity: 1;
+        }
+        to {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="max-w-4xl mx-auto ios-fade">
+        <div class="ios-card bg-ios-dark-card p-6 mb-6 ios-scale shadow-lg">
+            <div class="flex flex-col md:flex-row justify-between items-center mb-8">
+                <div class="text-center md:text-left mb-4 md:mb-0">
+                    <h1 class="text-3xl font-bold mb-2 bg-gradient-to-r from-tiktok-red to-tiktok-blue bg-clip-text text-transparent">Salle d'attente</h1>
+                    <p class="text-ios-gray">En attente du démarrage de la partie...</p>
+                </div>
+                
+                {% if current_user.id == game.creator_id %}
+                <div class="flex gap-2">
+                    <a href="{{ url_for('edit_game', game_code=game.code) }}" class="btn btn-outline btn-sm gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                        Modifier
+                    </a>
+                    
+                    <form id="start-game-form" action="{{ url_for('start_game', game_code=game.code) }}" method="post">
+                        <button type="submit" class="tiktok-button px-4 py-2" id="start-button" {% if game_players|length < 2 %}disabled{% endif %}>
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            Démarrer
+                        </button>
+                    </form>
+                </div>
+                {% endif %}
+            </div>
+            
+            <div class="divider text-ios-gray before:bg-ios-gray/20 after:bg-ios-gray/20">Code de la partie</div>
+            
+            <div class="flex flex-col items-center mb-8">
+                <div class="game-code mb-4">{{ game.code }}</div>
+                
+                <div class="flex gap-4 mb-4">
+                    <button id="copy-code-btn" class="btn btn-sm btn-outline gap-2" onclick="copyGameCode()">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                        </svg>
+                        Copier
+                    </button>
+                    
+                    <button id="qr-code-btn" class="btn btn-sm btn-outline gap-2" onclick="document.getElementById('qr-modal').showModal()">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4" />
+                        </svg>
+                        QR Code
+                    </button>
+                </div>
+                
+                <div class="text-center text-sm text-ios-gray">
+                    <p>Partagez ce code avec vos amis pour qu'ils puissent rejoindre la partie.</p>
+                    <p>Vous devez être au moins 2 joueurs pour commencer.</p>
+                </div>
+            </div>
+            
+            <div class="divider text-ios-gray before:bg-ios-gray/20 after:bg-ios-gray/20">
+                <div class="flex items-center gap-2">
+                    <span>Joueurs ({{ game_players|length }})</span>
+                    <div class="badge badge-sm {% if game_players|length < 2 %}badge-error{% else %}badge-success{% endif %}">
+                        {% if game_players|length < 2 %}Insuffisant{% else %}Prêt{% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <div id="players-container" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-4">
+                {% for game_player in game_players %}
+                    <div class="player-card p-4 text-center {% if current_user.id == game_player.user_id %}ring ring-tiktok-red{% endif %}">
+                        <div class="avatar mb-3">
+                            <div class="w-16 h-16 rounded-full mx-auto">
+                                <img src="{{ game_player.user.avatar_url or 'https://via.placeholder.com/100' }}" alt="Avatar" class="object-cover" />
+                            </div>
+                        </div>
+                        <div>
+                            <p class="font-bold truncate">{{ game_player.user.display_name }}</p>
+                            <p class="text-xs text-ios-gray truncate">@{{ game_player.user.tiktok_username }}</p>
+                            
+                            {% if game_player.user_id == game.creator_id %}
+                                <div class="badge badge-xs badge-primary mt-1">Créateur</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- QR Code Modal -->
+<dialog id="qr-modal" class="modal modal-bottom sm:modal-middle backdrop-blur-sm">
+    <div class="modal-box bg-ios-dark-card">
+        <h3 class="font-bold text-lg mb-4 text-center">Rejoindre avec QR Code</h3>
+        <div class="flex justify-center mb-4">
+            <img src="{{ url_for('static', filename='qr/' + game.code + '.png') }}" alt="QR Code" class="w-48 h-48 border-4 border-white rounded-lg" />
+        </div>
+        <p class="text-center text-sm text-ios-gray mb-4">Scannez ce QR code avec votre appareil mobile pour rejoindre la partie.</p>
+        <div class="modal-action">
+            <form method="dialog">
+                <button class="btn">Fermer</button>
+            </form>
+        </div>
+    </div>
+</dialog>
+
+<div id="toast-container"></div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Socket.io
+        const socket = io();
+        
+        // Rejoindre la salle
+        socket.emit('join', { game_code: '{{ game.code }}' });
+        
+        // Écouter les événements
+        socket.on('game_started', function(data) {
+            if (data.game_code === '{{ game.code }}') {
+                // Rediriger vers la page de jeu
+                window.location.href = '/play_game/{{ game.code }}';
+            }
+        });
+        
+        socket.on('player_joined', function(data) {
+            if (data.game_code === '{{ game.code }}') {
+                // Convertir le format des données pour qu'il soit compatible avec updatePlayersList
+                const formattedPlayers = data.players.map(player => ({
+                    user_id: player.user_id,
+                    user: {
+                        display_name: player.display_name,
+                        tiktok_username: player.tiktok_username,
+                        avatar_url: player.avatar_url
+                    }
+                }));
+                
+                // Mettre à jour la liste des joueurs sans rafraîchir la page
+                updatePlayersList(formattedPlayers);
+                
+                // Mettre à jour le badge
+                updatePlayersBadge(data.players.length);
+                
+                // Si c'est un nouveau joueur, afficher une notification
+                if (data.new_player && data.new_player.user_id !== {{ current_user.id }}) {
+                    showToast('Nouveau joueur', data.new_player.display_name + ' a rejoint la partie !');
+                    createConfetti();
+                }
+                
+                // Activer/désactiver le bouton de démarrage
+                const startButton = document.getElementById('start-button');
+                if (startButton) {
+                    startButton.disabled = data.players.length < 2;
+                }
+            }
+        });
+        
+        // Nouveau gestionnaire pour la synchronisation des joueurs
+        socket.on('player_list_update', function(data) {
+            if (data.game_code === '{{ game.code }}') {
+                // Convertir le format des données pour la compatibilité
+                const formattedPlayers = data.players.map(player => ({
+                    user_id: player.user_id,
+                    user: {
+                        display_name: player.display_name,
+                        tiktok_username: player.tiktok_username,
+                        avatar_url: player.avatar_url
+                    }
+                }));
+                
+                // Mettre à jour la liste des joueurs
+                updatePlayersList(formattedPlayers);
+                
+                // Mettre à jour le badge
+                updatePlayersBadge(data.players.length);
+                
+                // Activer/désactiver le bouton de démarrage
+                const startButton = document.getElementById('start-button');
+                if (startButton) {
+                    startButton.disabled = data.players.length < 2;
+                }
+            }
+        });
+        
+        // Gestion du formulaire de démarrage de jeu
+        const startGameForm = document.getElementById('start-game-form');
+        if (startGameForm) {
+            startGameForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                // Désactiver le bouton
+                const startButton = document.getElementById('start-button');
+                startButton.disabled = true;
+                startButton.innerHTML = `
+                    <span class="loading loading-spinner loading-sm"></span>
+                    Démarrage...
+                `;
+                
+                // Envoyer la requête AJAX
+                fetch(this.action, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        // La redirection sera gérée par Socket.io
+                    } else {
+                        // Afficher un message d'erreur
+                        showToast('Erreur', data.message, 'error');
+                        
+                        // Réactiver le bouton
+                        startButton.disabled = false;
+                        startButton.innerHTML = `
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            Démarrer
+                        `;
+                    }
+                })
+                .catch(error => {
+                    console.error('Erreur:', error);
+                });
+            });
+        }
+    });
+    
+    // Fonction pour copier le code de la partie
+    function copyGameCode() {
+        const gameCode = '{{ game.code }}';
+        navigator.clipboard.writeText(gameCode).then(function() {
+            showToast('Copié !', 'Le code de la partie a été copié dans le presse-papier.');
+        });
+    }
+    
+    // Fonction pour mettre à jour la liste des joueurs
+    function updatePlayersList(players) {
+        const playersContainer = document.getElementById('players-container');
+        playersContainer.innerHTML = '';
+        
+        players.forEach(function(player) {
+            const playerCard = document.createElement('div');
+            playerCard.className = 'player-card p-4 text-center ios-fade ios-scale';
+            if (player.user_id === {{ current_user.id }}) {
+                playerCard.classList.add('ring', 'ring-tiktok-red');
+            }
+            
+            playerCard.innerHTML = `
+                <div class="avatar mb-3">
+                    <div class="w-16 h-16 rounded-full mx-auto">
+                        <img src="${player.user.avatar_url || 'https://via.placeholder.com/100'}" alt="Avatar" class="object-cover" />
+                    </div>
+                </div>
+                <div>
+                    <p class="font-bold truncate">${player.user.display_name}</p>
+                    <p class="text-xs text-ios-gray truncate">@${player.user.tiktok_username}</p>
+                    
+                    ${player.user_id === {{ game.creator_id }} ? '<div class="badge badge-xs badge-primary mt-1">Créateur</div>' : ''}
+                </div>
+            `;
+            
+            playersContainer.appendChild(playerCard);
+        });
+    }
+    
+    // Fonction pour mettre à jour le badge des joueurs
+    function updatePlayersBadge(playersCount) {
+        const badgeContainer = document.querySelector('.divider .badge');
+        badgeContainer.textContent = playersCount < 2 ? 'Insuffisant' : 'Prêt';
+        
+        if (playersCount < 2) {
+            badgeContainer.classList.remove('badge-success');
+            badgeContainer.classList.add('badge-error');
+        } else {
+            badgeContainer.classList.remove('badge-error');
+            badgeContainer.classList.add('badge-success');
+        }
+        
+        // Mettre à jour le compteur
+        const playerCountSpan = document.querySelector('.divider span');
+        playerCountSpan.textContent = `Joueurs (${playersCount})`;
+    }
+    
+    // Fonction pour afficher un toast
+    function showToast(title, message, type = 'success') {
+        const toastContainer = document.getElementById('toast-container');
+        
+        const toast = document.createElement('div');
+        toast.className = `toast toast-${type} ios-fade`;
+        
+        let icon = '';
+        if (type === 'success') {
+            icon = '<span class="toast-icon text-ios-green">✓</span>';
+        } else if (type === 'error') {
+            icon = '<span class="toast-icon text-red-500">✗</span>';
+        } else if (type === 'info') {
+            icon = '<span class="toast-icon text-blue-500">ℹ</span>';
+        }
+        
+        toast.innerHTML = `
+            ${icon}
+            <div class="toast-content">
+                <div class="toast-title">${title}</div>
+                <div class="toast-message">${message}</div>
+            </div>
+        `;
+        
+        toastContainer.appendChild(toast);
+        
+        // Auto-dismiss after 3 seconds
+        setTimeout(() => {
+            toast.style.animation = 'toast-slide-out 0.3s forwards';
+            setTimeout(() => {
+                toastContainer.removeChild(toast);
+            }, 300);
+        }, 3000);
+    }
+    
+    // Fonction pour créer des confettis
+    function createConfetti() {
+        const colors = ['#fe2c55', '#25f4ee', '#fef601', '#22ddff', '#ff2986'];
+        const confettiCount = 50;
+        
+        for (let i = 0; i < confettiCount; i++) {
+            const confetti = document.createElement('div');
+            confetti.className = 'confetti';
+            confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+            confetti.style.left = Math.random() * 100 + 'vw';
+            confetti.style.animationDelay = Math.random() * 3 + 's';
+            confetti.style.animationDuration = (Math.random() * 2 + 2) + 's';
+            
+            document.body.appendChild(confetti);
+            
+            // Remove after animation completes
+            setTimeout(() => {
+                document.body.removeChild(confetti);
+            }, 5000);
+        }
+    }
+</script>
+{% endblock %} 

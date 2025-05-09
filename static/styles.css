@@ -1,0 +1,211 @@
+:root {
+    /* TikTok Colors */
+    --tiktok-red: #fe2c55;
+    --tiktok-blue: #25f4ee;
+    
+    /* iOS Dark Mode Colors */
+    --ios-dark-bg: #000000;
+    --ios-dark-card: #1c1c1e;
+    --ios-dark-elevated: #2c2c2e;
+    --ios-blue: #0a84ff;
+    --ios-green: #30d158;
+    --ios-red: #ff453a;
+    --ios-yellow: #ffd60a;
+    --ios-purple: #bf5af2;
+    --ios-gray: #8e8e93;
+    --ios-gray2: #636366;
+    --ios-gray3: #48484a;
+    --ios-gray4: #3a3a3c;
+    --ios-gray5: #2c2c2e;
+    --ios-gray6: #1c1c1e;
+}
+
+/* Base styles */
+body {
+    background-color: var(--ios-dark-bg);
+    color: white;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+/* Card styling */
+.ios-card {
+    background-color: var(--ios-dark-card);
+    border-radius: 12px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+}
+
+.ios-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+}
+
+/* Button styles */
+.ios-btn {
+    transition: all 0.3s ease;
+    display: inline-block;
+    text-align: center;
+    text-decoration: none;
+    border-radius: 12px;
+    font-weight: 500;
+    padding: 12px 20px;
+}
+
+.ios-btn:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+}
+
+.ios-btn:active {
+    opacity: 0.7;
+    transform: translateY(1px);
+}
+
+/* TikTok gradient */
+.tiktok-gradient {
+    background: linear-gradient(90deg, var(--tiktok-red) 0%, var(--tiktok-blue) 100%);
+}
+
+.tiktok-button {
+    background: linear-gradient(90deg, var(--tiktok-red) 0%, var(--tiktok-blue) 100%);
+    color: white;
+    border: none;
+    cursor: pointer;
+    padding: 12px 24px;
+    font-size: 16px;
+    border-radius: 8px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.tiktok-button:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+}
+
+/* Color utilities */
+.text-ios-blue { color: var(--ios-blue); }
+.text-ios-green { color: var(--ios-green); }
+.text-ios-red { color: var(--ios-red); }
+.text-ios-yellow { color: var(--ios-yellow); }
+.text-ios-purple { color: var(--ios-purple); }
+.text-ios-gray { color: var(--ios-gray); }
+
+.bg-ios-blue { background-color: var(--ios-blue); }
+.bg-ios-green { background-color: var(--ios-green); }
+.bg-ios-red { background-color: var(--ios-red); }
+.bg-ios-yellow { background-color: var(--ios-yellow); }
+.bg-ios-purple { background-color: var(--ios-purple); }
+.bg-ios-dark-bg { background-color: var(--ios-dark-bg); }
+.bg-ios-dark-card { background-color: var(--ios-dark-card); }
+.bg-ios-gray5 { background-color: var(--ios-gray5); }
+
+/* Animations */
+.ios-fade {
+    animation: iosFade 0.5s ease-in-out;
+}
+
+.ios-scale {
+    animation: iosScale 0.3s ease-in-out;
+}
+
+@keyframes iosFade {
+    0% { opacity: 0; }
+    100% { opacity: 1; }
+}
+
+@keyframes iosScale {
+    0% { transform: scale(0.95); }
+    70% { transform: scale(1.02); }
+    100% { transform: scale(1); }
+}
+
+.animate-pulse {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+.animate-spin {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* Video container */
+.video-container {
+    position: relative;
+    width: 100%;
+    max-width: 400px;
+    margin: 0 auto;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+}
+
+.video-container video {
+    width: 100%;
+    display: block;
+    background-color: var(--ios-dark-elevated);
+}
+
+/* Player cards */
+.player-card {
+    transition: all 0.3s ease;
+    cursor: pointer;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.player-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+}
+
+.player-card.selected {
+    border: 3px solid var(--tiktok-red);
+    box-shadow: 0 0 0 2px rgba(254, 44, 85, 0.5);
+}
+
+/* Confetti animation */
+.confetti {
+    position: fixed;
+    width: 10px;
+    height: 10px;
+    animation: confetti-fall 3s ease-in-out infinite;
+    z-index: 9999;
+}
+
+@keyframes confetti-fall {
+    0% {
+        transform: translateY(-100vh) rotate(0deg);
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(100vh) rotate(720deg);
+        opacity: 0;
+    }
+}
+
+/* Winner badge */
+.winner-badge {
+    position: absolute;
+    top: -15px;
+    right: -15px;
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(90deg, var(--tiktok-red) 0%, var(--tiktok-blue) 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+} 
