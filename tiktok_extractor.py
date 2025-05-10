@@ -75,8 +75,8 @@ class TikTokExtractor:
         options = uc.ChromeOptions()
         options.set_capability('goog:loggingPrefs', {'performance': 'ALL'})
         
-        # Forcer l'affichage du navigateur (ne pas utiliser headless)
-        options.headless = False
+        # Utiliser le nouveau mode headless
+        options.add_argument('--headless=new')
         
         # Ajouter le mode incognito
         options.add_argument('--incognito')
@@ -90,7 +90,7 @@ class TikTokExtractor:
         options.add_argument('--user-data-dir=/home/ubuntu/.config/chrome-data')
         options.add_argument('user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36')
         
-        logger.info("Initialisation du navigateur Chrome en mode incognito...")
+        logger.info("Initialisation du navigateur Chrome en mode headless et incognito...")
         
         # Utiliser directement le chemin Ubuntu sans détection d'OS
         driver_path = "/home/ubuntu/.local/share/undetected_chromedriver/undetected_adem"
