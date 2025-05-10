@@ -101,7 +101,12 @@ class TikTokExtractor:
         
         # Utiliser le driver_executable_path pour spécifier le chemin explicitement si disponible
         if driver_path and os.path.exists(driver_path):
-            self.driver = uc.Chrome(executable_path=driver_path, options=options)
+            try:
+                self.driver = uc.Chrome(executable_path=driver_path, options=options)
+            except OSError as e:
+                logger.error(f"Erreur avec le chemin spécifié: {e}")
+                logger.info("Tentative avec le chemin par défaut...")
+                self.driver = uc.Chrome(options=options)
         else:
             self.driver = uc.Chrome(options=options)
         
