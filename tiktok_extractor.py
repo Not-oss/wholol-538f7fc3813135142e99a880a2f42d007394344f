@@ -93,7 +93,7 @@ class TikTokExtractor:
         logger.info(f"Utilisation du chemin chromedriver: {driver_path}")
         
         # Utiliser le driver_executable_path pour spécifier le chemin explicitement
-        self.driver = uc.Chrome(options=options, driver_executable_path=driver_path, port=5000)
+        self.driver = uc.Chrome(options=options)
         self.driver.maximize_window()
     
     def extract_user_info(self):
