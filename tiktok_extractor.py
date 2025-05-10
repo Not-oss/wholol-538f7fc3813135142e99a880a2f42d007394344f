@@ -73,6 +73,7 @@ class TikTokExtractor:
     
     def setup_driver(self):
         """Configure le driver Chrome"""
+        # Créer une nouvelle instance de ChromeOptions à chaque appel
         options = uc.ChromeOptions()
         options.set_capability('goog:loggingPrefs', {'performance': 'ALL'})
         
@@ -99,18 +100,53 @@ class TikTokExtractor:
             driver_path = None
             logger.info(f"Système {system} détecté, utilisation du chemin chromedriver par défaut")
         
-        # Utiliser le driver_executable_path pour spécifier le chemin explicitement si disponible
-        if driver_path and os.path.exists(driver_path):
-            try:
-                self.driver = uc.Chrome(executable_path=driver_path, options=options)
-            except OSError as e:
-                logger.error(f"Erreur avec le chemin spécifié: {e}")
-                logger.info("Tentative avec le chemin par défaut...")
+        try:
+            # Utiliser le driver_executable_path pour spécifier le chemin explicitement si disponible
+            if driver_path and os.path.exists(driver_path):
+                try:
+                    self.driver = uc.Chrome(executable_path=driver_path, options=options)
+                except OSError as e:
+                    logger.error(f"Erreur avec le chemin spécifié: {e}")
+                    logger.info("Tentative avec le chemin par défaut...")
+                    # Créer une nouvelle instance de ChromeOptions car on ne peut pas réutiliser l'ancienne
+                    new_options = uc.ChromeOptions()
+                    new_options.set_capability('goog:loggingPrefs', {'performance': 'ALL'})
+                    new_options.headless = self.headless
+                    new_options.add_argument('--no-sandbox')
+                    new_options.add_argument('--disable-gpu')
+                    new_options.add_argument('--disable-dev-shm-usage')
+                    new_options.add_argument('--window-size=1920,1080')
+                    new_options.add_argument('--disable-notifications')
+                    new_options.add_argument('user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36')
+                    self.driver = uc.Chrome(options=new_options)
+            else:
                 self.driver = uc.Chrome(options=options)
-        else:
-            self.driver = uc.Chrome(options=options)
-        
-        self.driver.maximize_window()
+                
+            self.driver.maximize_window()
+            
+        except RuntimeError as e:
+            if "you cannot reuse the ChromeOptions object" in str(e):
+                logger.warning("Erreur de réutilisation des ChromeOptions, création d'une nouvelle instance...")
+                # Créer une nouvelle instance de ChromeOptions
+                new_options = uc.ChromeOptions()
+                new_options.set_capability('goog:loggingPrefs', {'performance': 'ALL'})
+                new_options.headless = self.headless
+                new_options.add_argument('--no-sandbox')
+                new_options.add_argument('--disable-gpu')
+                new_options.add_argument('--disable-dev-shm-usage')
+                new_options.add_argument('--window-size=1920,1080')
+                new_options.add_argument('--disable-notifications')
+                new_options.add_argument('user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36')
+                
+                if driver_path and os.path.exists(driver_path):
+                    self.driver = uc.Chrome(executable_path=driver_path, options=new_options)
+                else:
+                    self.driver = uc.Chrome(options=new_options)
+                    
+                self.driver.maximize_window()
+            else:
+                # Si c'est une autre erreur, la relancer
+                raise
     
     def extract_user_info(self):
         """Récupère les informations utilisateur via l'API ou la page"""

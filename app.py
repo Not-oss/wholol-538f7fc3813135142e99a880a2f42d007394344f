@@ -66,44 +66,95 @@ def logout():
 
 @app.route('/qr_login')
 def qr_login():
-    # Initialiser l'extracteur TikTok en mode non-headless (navigateur visible)
-    extractor = TikTokExtractor(headless=False, output_dir="temp_data")
-    
-    # Stocker l'instance dans la session
-    session['extractor_active'] = True
-    
-    # Lancer le navigateur et capturer le QR code
-    extractor.setup_driver()
-    extractor.driver.get("https://www.tiktok.com/login/qrcode?redirect_url=https://www.tiktok.com/")
-    
-    # Attendre que la page charge
-    import time
-    time.sleep(2)
-    
-    # Capturer le QR code
-    qr_code = extractor.capture_qr_code()
-    
-    # Stocker l'extracteur dans une variable globale (à améliorer dans une version de production)
-    global current_extractor
-    current_extractor = extractor
-    
-    # Copier le QR code dans le dossier static pour qu'il soit accessible au client
-    import shutil
-    import os
-    
-    # S'assurer que le dossier static/uploads existe
-    os.makedirs('static/uploads', exist_ok=True)
-    
-    # Copier le QR code depuis temp_data vers static/uploads
-    qr_source_path = os.path.join("temp_data", "tiktok_qr.png")
-    qr_destination_path = os.path.join("static", "uploads", "tiktok_qr.png")
-    shutil.copy2(qr_source_path, qr_destination_path)
-    
-    # URL du QR code accessible au client
-    qr_code_url = url_for('static', filename='uploads/tiktok_qr.png')
-    
-    return render_template('qr_login.html', qr_code_url=qr_code_url, mode="visible")
+    try:
+        # Initialiser l'extracteur TikTok en mode non-headless (navigateur visible)
+        extractor = TikTokExtractor(headless=False, output_dir="temp_data")
+        
+        # Stocker l'instance dans la session
+        session['extractor_active'] = True
+        
+        # Lancer le navigateur et capturer le QR code
+        extractor.setup_driver()
+        extractor.driver.get("https://www.tiktok.com/login/qrcode?redirect_url=https://www.tiktok.com/")
+        
+        # Attendre que la page charge
+        import time
+        time.sleep(2)
+        
+        # Capturer le QR code
+        qr_code = extractor.capture_qr_code()
+        
+        # Stocker l'extracteur dans une variable globale (à améliorer dans une version de production)
+        global current_extractor
+        current_extractor = extractor
+        
+        # Copier le QR code dans le dossier static pour qu'il soit accessible au client
+        import shutil
+        import os
+        
+        # S'assurer que le dossier static/uploads existe
+        os.makedirs('static/uploads', exist_ok=True)
+        
+        # Copier le QR code depuis temp_data vers static/uploads
+        qr_source_path = os.path.join("temp_data", "tiktok_qr.png")
+        qr_destination_path = os.path.join("static", "uploads", "tiktok_qr.png")
+        shutil.copy2(qr_source_path, qr_destination_path)
+        
+        # URL du QR code accessible au client
+        qr_code_url = url_for('static', filename='uploads/tiktok_qr.png')
+        
+        return render_template('qr_login.html', qr_code_url=qr_code_url, mode="visible")
+    except Exception as e:
+        import logging
+        logging.error(f"Erreur dans qr_login: {str(e)}")
+        flash(f"Une erreur est survenue lors de l'initialisation du navigateur: {str(e)}", "error")
+        return redirect(url_for('login'))
 
+@app.route('/qr_login_headless')
+def qr_login_headless():
+    try:
+        # Initialiser l'extracteur TikTok en mode headless (navigateur invisible)
+        extractor = TikTokExtractor(headless=True, output_dir="temp_data")
+        
+        # Stocker l'instance dans la session
+        session['extractor_active'] = True
+        
+        # Lancer le navigateur et capturer le QR code
+        extractor.setup_driver()
+        extractor.driver.get("https://www.tiktok.com/login/qrcode?redirect_url=https://www.tiktok.com/")
+        
+        # Attendre que la page charge
+        import time
+        time.sleep(2)
+        
+        # Capturer le QR code
+        qr_code = extractor.capture_qr_code()
+        
+        # Stocker l'extracteur dans une variable globale (à améliorer dans une version de production)
+        global current_extractor
+        current_extractor = extractor
+        
+        # Copier le QR code dans le dossier static pour qu'il soit accessible au client
+        import shutil
+        import os
+        
+        # S'assurer que le dossier static/uploads existe
+        os.makedirs('static/uploads', exist_ok=True)
+        
+        # Copier le QR code depuis temp_data vers static/uploads
+        qr_source_path = os.path.join("temp_data", "tiktok_qr.png")
+        qr_destination_path = os.path.join("static", "uploads", "tiktok_qr.png")
+        shutil.copy2(qr_source_path, qr_destination_path)
+        
+        # URL du QR code accessible au client
+        qr_code_url = url_for('static', filename='uploads/tiktok_qr.png')
+        
+        return render_template('qr_login.html', qr_code_url=qr_code_url, mode="headless")
+    except Exception as e:
+        import logging
+        logging.error(f"Erreur dans qr_login_headless: {str(e)}")
+        flash(f"Une erreur est survenue lors de l'initialisation du navigateur headless: {str(e)}", "error")
+        return redirect(url_for('login'))
 
 @app.route('/check_login_status')
 def check_login_status():
