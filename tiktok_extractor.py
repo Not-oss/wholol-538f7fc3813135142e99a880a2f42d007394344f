@@ -76,24 +76,18 @@ class TikTokExtractor:
         options = uc.ChromeOptions()
         options.set_capability('goog:loggingPrefs', {'performance': 'ALL'})
         
+        # Utiliser le paramètre headless passé au constructeur
+        options.headless = self.headless
+        logger.info(f"Mode headless: {'activé' if self.headless else 'désactivé'}")
+        
         # Configuration standard
         options.add_argument('--no-sandbox')
+        options.add_argument("--headless=new")
         options.add_argument('--disable-gpu')
         options.add_argument('--disable-dev-shm-usage')
         options.add_argument('--window-size=1920,1080')
         options.add_argument('--disable-notifications')
         options.add_argument('user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36')
-        
-        # Configuration du mode headless pour undetected_chromedriver
-        if self.headless:
-            logger.info("Mode headless activé")
-            options.add_argument('--headless=new')
-            # Arguments supplémentaires pour le mode headless
-            options.add_argument('--disable-extensions')
-            options.add_argument('--disable-setuid-sandbox')
-            options.add_argument('--disable-blink-features=AutomationControlled')
-        else:
-            logger.info("Mode headless désactivé")
         
         logger.info("Initialisation du navigateur Chrome...")
         
@@ -139,34 +133,19 @@ class TikTokExtractor:
             logger.info(f"Système {system} détecté, utilisation du chemin chromedriver par défaut")
         
         # Utiliser le driver_executable_path pour spécifier le chemin explicitement si disponible
-        try:
-            if driver_path and os.path.exists(driver_path):
-                logger.info(f"Tentative d'initialisation avec le chemin spécifié: {driver_path}")
+        if driver_path and os.path.exists(driver_path):
+            try:
                 self.driver = uc.Chrome(driver_executable_path=driver_path, options=options)
-                logger.info(f"Driver initialisé avec succès en utilisant le chemin spécifié")
-            else:
-                logger.info("Utilisation du chemin de driver par défaut")
+                logger.info(f"Driver initialisé avec succès en utilisant le chemin spécifié: {driver_path}")
+            except OSError as e:
+                logger.error(f"Erreur avec le chemin spécifié: {e}")
+                logger.info("Tentative avec le chemin par défaut...")
                 self.driver = uc.Chrome(options=options)
-                logger.info("Driver initialisé avec succès avec le chemin par défaut")
-        except Exception as e:
-            logger.error(f"Erreur lors de l'initialisation du driver: {str(e)}")
-            logger.info("Tentative avec le chemin par défaut et sans options headless...")
-            
-            # En cas d'échec, essayer sans headless
-            if self.headless:
-                options = uc.ChromeOptions()
-                options.add_argument('--no-sandbox')
-                options.add_argument('--disable-gpu')
-                options.add_argument('--disable-dev-shm-usage')
-                logger.info("Réessai sans mode headless")
-                self.driver = uc.Chrome(options=options)
-            else:
-                # Sinon, essayer avec les options par défaut
-                self.driver = uc.Chrome()
+        else:
+            logger.info("Utilisation du chemin de driver par défaut")
+            self.driver = uc.Chrome(options=options)
         
-        # Maximiser la fenêtre si non headless
-        if not self.headless and self.driver:
-            self.driver.maximize_window()
+        self.driver.maximize_window()
     
     def extract_user_info(self):
         """Récupère les informations utilisateur via l'API ou la page"""
