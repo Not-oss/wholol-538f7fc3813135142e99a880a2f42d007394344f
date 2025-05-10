@@ -94,7 +94,7 @@ class TikTokExtractor:
         # Utiliser directement le chemin Ubuntu sans détection d'OS
         driver_path = "/home/ubuntu/.local/share/undetected_chromedriver/undetected_adem"
         logger.info(f"Utilisation du chemin chromedriver: {driver_path}")
-        self.driver = uc.Chrome(options=options, driver_executable_path=driver_path, port=7777)
+        self.driver = uc.Chrome(options=options, driver_executable_path=driver_path)
         
         self.driver.maximize_window()
     
