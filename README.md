@@ -59,9 +59,34 @@ SECRET_KEY=votre_clef_secrete
 RAPIDAPI_KEY=votre_clef_api_rapidapi
 ```
 
-### Lancement de l'application
+### Installation sur Ubuntu
+
+Pour installer et configurer l'application sur Ubuntu, suivez ces étapes:
+
+1. Clonez le dépôt:
+```bash
+git clone <url_du_repo>
+cd <nom_du_repo>
+```
+
+2. Exécutez le script de configuration:
+```bash
+chmod +x setup_ubuntu.sh
+./setup_ubuntu.sh
+```
+
+3. Lancez l'application:
+```bash
+chmod +x run.sh
+./run.sh
+```
+
+L'application sera disponible à l'adresse http://localhost:5000
+
+### Installation sur Windows
 
 ```bash
+pip install -r requirements.txt
 python app.py
 ```
 

@@ -7,6 +7,7 @@ import logging
 import re
 import requests
 import random
+import platform
 #import cv2
 from urllib.request import urlretrieve
 from datetime import datetime
@@ -88,12 +89,21 @@ class TikTokExtractor:
         
         logger.info("Initialisation du navigateur Chrome...")
         
-        # Utiliser explicitement le chemin du chromedriver spécifié
-        driver_path = "/home/ubuntu/.local/share/undetected_chromedriver/undetected_adem"
-        logger.info(f"Utilisation du chemin chromedriver: {driver_path}")
+        # Détecter le système d'exploitation et définir le chemin du chromedriver en conséquence
+        system = platform.system()
+        if system == "Linux":
+            driver_path = "/home/ubuntu/.local/share/undetected_chromedriver/undetected_adem"
+            logger.info(f"Système Linux détecté, utilisation du chemin chromedriver: {driver_path}")
+        else:
+            driver_path = None
+            logger.info(f"Système {system} détecté, utilisation du chemin chromedriver par défaut")
         
-        # Utiliser le driver_executable_path pour spécifier le chemin explicitement
-        self.driver = uc.Chrome(options=options)
+        # Utiliser le driver_executable_path pour spécifier le chemin explicitement si disponible
+        if driver_path and os.path.exists(driver_path):
+            self.driver = uc.Chrome(executable_path=driver_path, options=options)
+        else:
+            self.driver = uc.Chrome(options=options)
+        
         self.driver.maximize_window()
     
     def extract_user_info(self):
