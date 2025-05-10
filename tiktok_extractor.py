@@ -87,7 +87,13 @@ class TikTokExtractor:
         options.add_argument('user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36')
         
         logger.info("Initialisation du navigateur Chrome...")
-        self.driver = uc.Chrome(options=options, port=5000)
+        
+        # Utiliser explicitement le chemin du chromedriver spécifié
+        driver_path = "/home/ubuntu/.local/share/undetected_chromedriver/undetected_adem"
+        logger.info(f"Utilisation du chemin chromedriver: {driver_path}")
+        
+        # Utiliser le driver_executable_path pour spécifier le chemin explicitement
+        self.driver = uc.Chrome(options=options, driver_executable_path=driver_path, port=5000)
         self.driver.maximize_window()
     
     def extract_user_info(self):
