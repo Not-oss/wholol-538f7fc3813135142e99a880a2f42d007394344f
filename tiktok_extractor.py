@@ -72,68 +72,23 @@ class TikTokExtractor:
     
     def setup_driver(self):
         """Configure le driver Chrome"""
-        try:
-            # Tuer tous les processus Chrome existants
-            import subprocess
-            import platform
-            try:
-                logger.info("Nettoyage des processus Chrome existants...")
-                if platform.system() == "Windows":
-                    subprocess.run(['taskkill', '/f', '/im', 'chrome.exe'], stderr=subprocess.DEVNULL)
-                    subprocess.run(['taskkill', '/f', '/im', 'chromedriver.exe'], stderr=subprocess.DEVNULL)
-                else:
-                    subprocess.run(['pkill', '-f', 'chrome'], stderr=subprocess.DEVNULL)
-                    subprocess.run(['pkill', '-f', 'chromedriver'], stderr=subprocess.DEVNULL)
-                time.sleep(2)  # Attendre que les processus se terminent
-            except:
-                pass
-            
-            logger.info("Initialisation du navigateur Chrome...")
-            
-            # Utiliser la méthode la plus directe possible
-            import selenium.webdriver as webdriver
-            from selenium.webdriver.chrome.service import Service
-            
-            options = webdriver.ChromeOptions()
-            options.add_argument('--no-sandbox')
-            options.add_argument('--disable-dev-shm-usage')
-            options.add_argument('--disable-extensions')
-            options.add_argument('--disable-gpu')
-            options.add_argument('--window-size=1920,1080')
-            
-            # Essayer d'abord avec le chemin spécifique
-            try:
-                service = Service(executable_path="/home/ubuntu/.local/share/undetected_chromedriver/undetected_adem")
-                self.driver = webdriver.Chrome(service=service, options=options)
-                logger.info("Chrome initialisé avec le chemin spécifique")
-            except Exception as e:
-                logger.warning(f"Échec avec le chemin spécifique: {str(e)}")
-                
-                # Essayer avec le chemin par défaut
-                self.driver = webdriver.Chrome(options=options)
-                logger.info("Chrome initialisé avec le chemin par défaut")
-            
-            self.driver.maximize_window()
-            
-        except Exception as e:
-            logger.error(f"Erreur lors de l'initialisation de Chrome: {str(e)}")
-            
-            # Essayer avec undetected_chromedriver sans spécifier de port
-            try:
-                logger.info("Tentative avec undetected_chromedriver de base...")
-                import undetected_chromedriver as uc
-                
-                options = uc.ChromeOptions()
-                options.add_argument('--no-sandbox')
-                
-                # Ne pas spécifier de chemin ni de port
-                self.driver = uc.Chrome(options=options, use_subprocess=True)
-                
-                logger.info("Chrome initialisé avec undetected_chromedriver")
-                self.driver.maximize_window()
-            except Exception as e2:
-                logger.error(f"Échec avec undetected_chromedriver: {str(e2)}")
-                raise
+        options = uc.ChromeOptions()
+        options.set_capability('goog:loggingPrefs', {'performance': 'ALL'})
+        
+        # Forcer l'affichage du navigateur (ne pas utiliser headless)
+        options.headless = False
+        
+        # Configuration standard
+        options.add_argument('--no-sandbox')
+        options.add_argument('--disable-gpu')
+        options.add_argument('--disable-dev-shm-usage')
+        options.add_argument('--window-size=1920,1080')
+        options.add_argument('--disable-notifications')
+        options.add_argument('user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36')
+        
+        logger.info("Initialisation du navigateur Chrome...")
+        self.driver = uc.Chrome(options=options, port=7777)
+        self.driver.maximize_window()
     
     def extract_user_info(self):
         """Récupère les informations utilisateur via l'API ou la page"""
