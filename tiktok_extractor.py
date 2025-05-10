@@ -38,7 +38,7 @@ class TikTokExtractor:
     # Variable de classe pour stocker la dernière clé API fonctionnelle
     LAST_WORKING_KEY = None
     
-    def __init__(self, headless=True, output_dir="output", rapid_api_key=None):
+    def __init__(self, headless=False, output_dir="output", rapid_api_key=None):
         """Initialisation"""
         self.headless = headless
         self.output_dir = output_dir
@@ -82,8 +82,6 @@ class TikTokExtractor:
         
         # Configuration standard
         options.add_argument('--no-sandbox')
-        options.add_argument("--headless")
-        options.add_argument("--incognito")
         options.add_argument('--disable-gpu')
         options.add_argument('--disable-dev-shm-usage')
         options.add_argument('--window-size=1920,1080')
@@ -94,56 +92,22 @@ class TikTokExtractor:
         
         # Détecter le système d'exploitation et définir le chemin du chromedriver en conséquence
         system = platform.system()
-        driver_path = None
-        
         if system == "Linux":
-            # Vérifier l'architecture du système
-            architecture = platform.machine()
-            logger.info(f"Système Linux détecté, architecture: {architecture}")
-            
-            if architecture in ["aarch64", "arm64", "armv8"]:
-                # Architecture ARM (aarch64)
-                logger.info("Architecture ARM détectée, utilisation du driver ARM")
-                
-                # Vérifier si chromedriver existe dans /usr/bin
-                usr_bin_driver = "/usr/bin/chromedriver"
-                if os.path.exists(usr_bin_driver):
-                    # Créer un répertoire pour stocker la copie du driver si nécessaire
-                    driver_dir = "/home/ubuntu/.local/share/undetected_chromedriver"
-                    os.makedirs(driver_dir, exist_ok=True)
-                    
-                    # Définir le chemin pour la copie du driver
-                    driver_path = os.path.join(driver_dir, "undetected_adem")
-                    
-                    # Copier le driver s'il n'existe pas déjà
-                    if not os.path.exists(driver_path):
-                        import shutil
-                        logger.info(f"Copie du driver de {usr_bin_driver} vers {driver_path}")
-                        shutil.copy2(usr_bin_driver, driver_path)
-                        # Rendre le fichier exécutable
-                        os.chmod(driver_path, 0o755)
-                    
-                    logger.info(f"Utilisation du driver ARM copié: {driver_path}")
-                else:
-                    logger.warning("Driver Chrome pour ARM non trouvé dans /usr/bin/chromedriver")
-            else:
-                # Architecture x86_64 standard
-                driver_path = "/home/ubuntu/.local/share/undetected_chromedriver/undetected_adem"
-                logger.info(f"Architecture x86_64 détectée, utilisation du chemin chromedriver: {driver_path}")
+            driver_path = "/home/ubuntu/.local/share/undetected_chromedriver/undetected_adem"
+            logger.info(f"Système Linux détecté, utilisation du chemin chromedriver: {driver_path}")
         else:
+            driver_path = None
             logger.info(f"Système {system} détecté, utilisation du chemin chromedriver par défaut")
         
         # Utiliser le driver_executable_path pour spécifier le chemin explicitement si disponible
         if driver_path and os.path.exists(driver_path):
             try:
-                self.driver = uc.Chrome(driver_executable_path=driver_path, options=options)
-                logger.info(f"Driver initialisé avec succès en utilisant le chemin spécifié: {driver_path}")
+                self.driver = uc.Chrome(executable_path=driver_path, options=options)
             except OSError as e:
                 logger.error(f"Erreur avec le chemin spécifié: {e}")
                 logger.info("Tentative avec le chemin par défaut...")
                 self.driver = uc.Chrome(options=options)
         else:
-            logger.info("Utilisation du chemin de driver par défaut")
             self.driver = uc.Chrome(options=options)
         
         self.driver.maximize_window()
