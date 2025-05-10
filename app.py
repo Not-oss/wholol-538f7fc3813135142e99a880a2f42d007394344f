@@ -68,13 +68,14 @@ def logout():
 def qr_login():
     try:
         # Initialiser l'extracteur TikTok (toujours en mode non-headless)
+        logger.info("Création de l'instance TikTokExtractor...")
         extractor = TikTokExtractor(output_dir="temp_data")
         
         # Stocker l'instance dans la session
         session['extractor_active'] = True
         
         # Lancer le navigateur et capturer le QR code
-        logger.info("Tentative d'initialisation du driver avec le chemin forcé...")
+        logger.info("Tentative d'initialisation du driver...")
         extractor.setup_driver()
         
         # Accéder à la page de login TikTok
@@ -116,8 +117,9 @@ def qr_login():
         logger.info("Rendu du template QR login...")
         return render_template('qr_login.html', qr_code_url=qr_code_url)
     except Exception as e:
-        import logging
-        logging.error(f"Erreur critique dans qr_login: {str(e)}")
+        import traceback
+        logger.error(f"Erreur critique dans qr_login: {str(e)}")
+        logger.error(f"Traceback: {traceback.format_exc()}")
         flash(f"Une erreur est survenue lors de l'initialisation du navigateur: {str(e)}", "error")
         return redirect(url_for('login'))
 

@@ -84,43 +84,113 @@ class TikTokExtractor:
         options.add_argument('--no-sandbox')
         options.add_argument('--disable-gpu')
         options.add_argument('--disable-dev-shm-usage')
+        options.add_argument('--disable-software-rasterizer')  # Désactiver le rasterizer logiciel
+        options.add_argument('--disable-extensions')  # Désactiver les extensions
         options.add_argument('--window-size=1920,1080')
         options.add_argument('--disable-notifications')
         options.add_argument('--display=:99')  # Spécifier l'affichage pour xvfb
         options.add_argument('user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36')
         
+        # Configuration spécifique pour xvfb
+        os.environ['DISPLAY'] = ':99'
+        
         logger.info("Initialisation du navigateur Chrome...")
         
-        # Forcer l'utilisation du chemin spécifique
-        driver_path = "/home/ubuntu/.local/share/undetected_chromedriver/undetected_adem"
-        logger.info(f"Utilisation forcée du chemin chromedriver: {driver_path}")
-        
+        # Vérifier si chromedriver est installé
         try:
-            # Utiliser directement le driver avec le chemin spécifié
-            self.driver = uc.Chrome(executable_path=driver_path, options=options)
-            self.driver.maximize_window()
-            
-        except RuntimeError as e:
-            if "you cannot reuse the ChromeOptions object" in str(e):
-                logger.warning("Erreur de réutilisation des ChromeOptions, création d'une nouvelle instance...")
-                # Créer une nouvelle instance de ChromeOptions
-                new_options = uc.ChromeOptions()
-                new_options.set_capability('goog:loggingPrefs', {'performance': 'ALL'})
-                new_options.headless = False
-                new_options.add_argument('--no-sandbox')
-                new_options.add_argument('--disable-gpu')
-                new_options.add_argument('--disable-dev-shm-usage')
-                new_options.add_argument('--window-size=1920,1080')
-                new_options.add_argument('--disable-notifications')
-                new_options.add_argument('--display=:99')  # Spécifier l'affichage pour xvfb
-                new_options.add_argument('user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36')
+            import subprocess
+            result = subprocess.run(['which', 'chromedriver'], capture_output=True, text=True)
+            chromedriver_path = result.stdout.strip()
+            logger.info(f"Chemin chromedriver détecté: {chromedriver_path if chromedriver_path else 'Non trouvé'}")
+        except Exception as e:
+            logger.warning(f"Erreur lors de la recherche de chromedriver: {e}")
+            chromedriver_path = None
+        
+        # Liste des approches à essayer
+        approaches = [
+            {"desc": "Approche 1: Driver par défaut", "use_path": False, "path": None},
+            {"desc": "Approche 2: Driver avec selenium-manager", "use_path": False, "path": None, "use_selenium_manager": True},
+            {"desc": "Approche 3: Driver avec chemin détecté", "use_path": True, "path": chromedriver_path} if chromedriver_path else None,
+            {"desc": "Approche 4: Driver avec chemin standard", "use_path": True, "path": "/usr/bin/chromedriver"},
+            {"desc": "Approche 5: Driver avec chemin alternatif", "use_path": True, "path": "/usr/local/bin/chromedriver"}
+        ]
+        
+        # Filtrer les approches None
+        approaches = [a for a in approaches if a is not None]
+        
+        last_error = None
+        
+        # Essayer chaque approche jusqu'à ce qu'une fonctionne
+        for approach in approaches:
+            try:
+                logger.info(f"Tentative avec {approach['desc']}...")
                 
-                # Toujours utiliser le chemin forcé
-                self.driver = uc.Chrome(executable_path=driver_path, options=new_options)
+                # Créer une nouvelle instance de ChromeOptions pour chaque tentative
+                current_options = uc.ChromeOptions()
+                current_options.set_capability('goog:loggingPrefs', {'performance': 'ALL'})
+                current_options.headless = False
+                current_options.add_argument('--no-sandbox')
+                current_options.add_argument('--disable-gpu')
+                current_options.add_argument('--disable-dev-shm-usage')
+                current_options.add_argument('--disable-software-rasterizer')
+                current_options.add_argument('--disable-extensions')
+                current_options.add_argument('--window-size=1920,1080')
+                current_options.add_argument('--disable-notifications')
+                current_options.add_argument('--display=:99')
+                current_options.add_argument('user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36')
+                
+                # Utiliser selenium-manager si spécifié
+                if approach.get("use_selenium_manager", False):
+                    current_options.add_experimental_option("webdriver.use_selenium_manager", True)
+                
+                if approach["use_path"] and approach["path"]:
+                    self.driver = uc.Chrome(executable_path=approach["path"], options=current_options)
+                else:
+                    self.driver = uc.Chrome(options=current_options)
+                
                 self.driver.maximize_window()
-            else:
-                # Si c'est une autre erreur, la relancer
-                raise
+                logger.info(f"Succès avec {approach['desc']}!")
+                return  # Sortir de la fonction si réussi
+                
+            except Exception as e:
+                last_error = e
+                logger.warning(f"Échec avec {approach['desc']}: {str(e)}")
+                continue
+        
+        # Si toutes les approches ont échoué, essayer d'installer chromedriver
+        try:
+            logger.info("Tentative d'installation automatique de chromedriver...")
+            import subprocess
+            subprocess.run(['apt-get', 'update'], check=True)
+            subprocess.run(['apt-get', 'install', '-y', 'chromium-chromedriver'], check=True)
+            
+            # Essayer à nouveau avec le chemin standard après installation
+            logger.info("Tentative avec le chromedriver nouvellement installé...")
+            current_options = uc.ChromeOptions()
+            current_options.set_capability('goog:loggingPrefs', {'performance': 'ALL'})
+            current_options.headless = False
+            current_options.add_argument('--no-sandbox')
+            current_options.add_argument('--disable-gpu')
+            current_options.add_argument('--disable-dev-shm-usage')
+            current_options.add_argument('--disable-software-rasterizer')
+            current_options.add_argument('--disable-extensions')
+            current_options.add_argument('--window-size=1920,1080')
+            current_options.add_argument('--disable-notifications')
+            current_options.add_argument('--display=:99')
+            current_options.add_argument('user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36')
+            
+            self.driver = uc.Chrome(executable_path="/usr/bin/chromedriver", options=current_options)
+            self.driver.maximize_window()
+            logger.info("Succès avec le chromedriver nouvellement installé!")
+            return
+            
+        except Exception as e:
+            logger.error(f"Échec de l'installation automatique de chromedriver: {str(e)}")
+        
+        # Si toutes les approches ont échoué, lever la dernière erreur
+        if last_error:
+            logger.error("Toutes les approches ont échoué pour initialiser le driver")
+            raise last_error
     
     def extract_user_info(self):
         """Récupère les informations utilisateur via l'API ou la page"""
