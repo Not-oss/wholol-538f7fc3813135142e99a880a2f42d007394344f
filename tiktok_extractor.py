@@ -91,9 +91,13 @@ class TikTokExtractor:
         
         logger.info("Initialisation du navigateur Chrome...")
         
+        # Forcer l'utilisation du chemin spécifique
+        driver_path = "/home/ubuntu/.local/share/undetected_chromedriver/undetected_adem"
+        logger.info(f"Utilisation forcée du chemin chromedriver: {driver_path}")
+        
         try:
-            # Utiliser directement le driver par défaut sans spécifier de chemin
-            self.driver = uc.Chrome(options=options)
+            # Utiliser directement le driver avec le chemin spécifié
+            self.driver = uc.Chrome(executable_path=driver_path, options=options)
             self.driver.maximize_window()
             
         except RuntimeError as e:
@@ -111,7 +115,8 @@ class TikTokExtractor:
                 new_options.add_argument('--display=:99')  # Spécifier l'affichage pour xvfb
                 new_options.add_argument('user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36')
                 
-                self.driver = uc.Chrome(options=new_options)
+                # Toujours utiliser le chemin forcé
+                self.driver = uc.Chrome(executable_path=driver_path, options=new_options)
                 self.driver.maximize_window()
             else:
                 # Si c'est une autre erreur, la relancer

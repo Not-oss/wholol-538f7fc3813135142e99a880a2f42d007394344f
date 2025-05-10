@@ -74,7 +74,11 @@ def qr_login():
         session['extractor_active'] = True
         
         # Lancer le navigateur et capturer le QR code
+        logger.info("Tentative d'initialisation du driver avec le chemin forcé...")
         extractor.setup_driver()
+        
+        # Accéder à la page de login TikTok
+        logger.info("Accès à la page de login TikTok...")
         extractor.driver.get("https://www.tiktok.com/login/qrcode?redirect_url=https://www.tiktok.com/")
         
         # Attendre que la page charge
@@ -82,7 +86,13 @@ def qr_login():
         time.sleep(2)
         
         # Capturer le QR code
+        logger.info("Capture du QR code...")
         qr_code = extractor.capture_qr_code()
+        
+        if not qr_code:
+            logger.error("Échec de la capture du QR code")
+            flash("Impossible de capturer le QR code. Veuillez réessayer.", "error")
+            return redirect(url_for('login'))
         
         # Stocker l'extracteur dans une variable globale (à améliorer dans une version de production)
         global current_extractor
@@ -103,10 +113,11 @@ def qr_login():
         # URL du QR code accessible au client
         qr_code_url = url_for('static', filename='uploads/tiktok_qr.png')
         
+        logger.info("Rendu du template QR login...")
         return render_template('qr_login.html', qr_code_url=qr_code_url)
     except Exception as e:
         import logging
-        logging.error(f"Erreur dans qr_login: {str(e)}")
+        logging.error(f"Erreur critique dans qr_login: {str(e)}")
         flash(f"Une erreur est survenue lors de l'initialisation du navigateur: {str(e)}", "error")
         return redirect(url_for('login'))
 
