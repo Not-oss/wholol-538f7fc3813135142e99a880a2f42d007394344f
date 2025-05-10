@@ -36,6 +36,15 @@ Le jeu implémente un système d'authentification innovant utilisant des QR code
 
 Ce système permet d'éviter de stocker les identifiants TikTok et d'accéder facilement aux vidéos likées par l'utilisateur, en utilisant un navigateur automatisé (undetected_chromedriver) qui simule l'authentification TikTok et extrait les cookies de session nécessaires.
 
+### Modes de connexion
+
+L'application propose deux modes de connexion via QR code :
+
+- **Mode visible** : Le navigateur Chrome s'ouvre et est visible pendant le processus d'authentification. Ce mode est plus stable mais nécessite plus de ressources.
+- **Mode invisible (headless)** : Le navigateur fonctionne en arrière-plan sans interface graphique. Ce mode est plus léger mais peut être moins stable sur certains systèmes.
+
+Choisissez le mode qui convient le mieux à votre environnement et à vos ressources système.
+
 ## Installation
 
 ### Prérequis

@@ -76,8 +76,9 @@ class TikTokExtractor:
         options = uc.ChromeOptions()
         options.set_capability('goog:loggingPrefs', {'performance': 'ALL'})
         
-        # Forcer l'affichage du navigateur (ne pas utiliser headless)
-        options.headless = False
+        # Utiliser le paramètre headless passé au constructeur
+        options.headless = self.headless
+        logger.info(f"Mode headless: {'activé' if self.headless else 'désactivé'}")
         
         # Configuration standard
         options.add_argument('--no-sandbox')
