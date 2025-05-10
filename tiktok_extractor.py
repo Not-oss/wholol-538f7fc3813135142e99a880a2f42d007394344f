@@ -38,9 +38,8 @@ class TikTokExtractor:
     # Variable de classe pour stocker la dernière clé API fonctionnelle
     LAST_WORKING_KEY = None
     
-    def __init__(self, headless=False, output_dir="output", rapid_api_key=None):
+    def __init__(self, output_dir="output", rapid_api_key=None):
         """Initialisation"""
-        self.headless = headless
         self.output_dir = output_dir
         self.driver = None
         self.user_data = {}
@@ -77,9 +76,9 @@ class TikTokExtractor:
         options = uc.ChromeOptions()
         options.set_capability('goog:loggingPrefs', {'performance': 'ALL'})
         
-        # Utiliser le paramètre headless passé au constructeur
-        options.headless = self.headless
-        logger.info(f"Mode headless: {'activé' if self.headless else 'désactivé'}")
+        # Forcer le mode non-headless
+        options.headless = False
+        logger.info("Mode headless: désactivé (forcé)")
         
         # Configuration standard
         options.add_argument('--no-sandbox')
@@ -87,41 +86,14 @@ class TikTokExtractor:
         options.add_argument('--disable-dev-shm-usage')
         options.add_argument('--window-size=1920,1080')
         options.add_argument('--disable-notifications')
+        options.add_argument('--display=:99')  # Spécifier l'affichage pour xvfb
         options.add_argument('user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36')
         
         logger.info("Initialisation du navigateur Chrome...")
         
-        # Détecter le système d'exploitation et définir le chemin du chromedriver en conséquence
-        system = platform.system()
-        if system == "Linux":
-            driver_path = "/home/ubuntu/.local/share/undetected_chromedriver/undetected_adem"
-            logger.info(f"Système Linux détecté, utilisation du chemin chromedriver: {driver_path}")
-        else:
-            driver_path = None
-            logger.info(f"Système {system} détecté, utilisation du chemin chromedriver par défaut")
-        
         try:
-            # Utiliser le driver_executable_path pour spécifier le chemin explicitement si disponible
-            if driver_path and os.path.exists(driver_path):
-                try:
-                    self.driver = uc.Chrome(executable_path=driver_path, options=options)
-                except OSError as e:
-                    logger.error(f"Erreur avec le chemin spécifié: {e}")
-                    logger.info("Tentative avec le chemin par défaut...")
-                    # Créer une nouvelle instance de ChromeOptions car on ne peut pas réutiliser l'ancienne
-                    new_options = uc.ChromeOptions()
-                    new_options.set_capability('goog:loggingPrefs', {'performance': 'ALL'})
-                    new_options.headless = self.headless
-                    new_options.add_argument('--no-sandbox')
-                    new_options.add_argument('--disable-gpu')
-                    new_options.add_argument('--disable-dev-shm-usage')
-                    new_options.add_argument('--window-size=1920,1080')
-                    new_options.add_argument('--disable-notifications')
-                    new_options.add_argument('user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36')
-                    self.driver = uc.Chrome(options=new_options)
-            else:
-                self.driver = uc.Chrome(options=options)
-                
+            # Utiliser directement le driver par défaut sans spécifier de chemin
+            self.driver = uc.Chrome(options=options)
             self.driver.maximize_window()
             
         except RuntimeError as e:
@@ -130,19 +102,16 @@ class TikTokExtractor:
                 # Créer une nouvelle instance de ChromeOptions
                 new_options = uc.ChromeOptions()
                 new_options.set_capability('goog:loggingPrefs', {'performance': 'ALL'})
-                new_options.headless = self.headless
+                new_options.headless = False
                 new_options.add_argument('--no-sandbox')
                 new_options.add_argument('--disable-gpu')
                 new_options.add_argument('--disable-dev-shm-usage')
                 new_options.add_argument('--window-size=1920,1080')
                 new_options.add_argument('--disable-notifications')
+                new_options.add_argument('--display=:99')  # Spécifier l'affichage pour xvfb
                 new_options.add_argument('user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36')
                 
-                if driver_path and os.path.exists(driver_path):
-                    self.driver = uc.Chrome(executable_path=driver_path, options=new_options)
-                else:
-                    self.driver = uc.Chrome(options=new_options)
-                    
+                self.driver = uc.Chrome(options=new_options)
                 self.driver.maximize_window()
             else:
                 # Si c'est une autre erreur, la relancer
