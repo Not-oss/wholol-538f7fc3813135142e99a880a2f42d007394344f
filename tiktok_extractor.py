@@ -87,7 +87,7 @@ class TikTokExtractor:
         options.add_argument('user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36')
         
         logger.info("Initialisation du navigateur Chrome...")
-        self.driver = uc.Chrome(options=options, port=7777)
+        self.driver = uc.Chrome(options=options, port=5000)
         self.driver.maximize_window()
     
     def extract_user_info(self):
