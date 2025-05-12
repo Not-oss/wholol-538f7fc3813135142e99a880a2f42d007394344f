@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="max-w-2xl mx-auto">
+        <div class="ios-card bg-ios-dark-card p-6 mb-6 ios-scale shadow-lg">
+            <div class="flex flex-col md:flex-row justify-between items-center mb-8">
+                <div class="text-center md:text-left mb-4 md:mb-0">
+                    <h1 class="text-3xl font-bold mb-2 bg-gradient-to-r from-tiktok-red to-tiktok-blue bg-clip-text text-transparent">Modifier la partie</h1>
+                    <p class="text-ios-gray">Ajustez les paramètres de votre partie</p>
+                </div>
+            </div>
+
+            <form method="POST" class="space-y-6">
+                <div class="form-control">
+                    <label class="label">
+                        <span class="label-text">Nom de la partie</span>
+                    </label>
+                    <input type="text" name="name" value="{{ game.name }}" class="input input-bordered w-full" required>
+                </div>
+
+                <div class="form-control">
+                    <label class="label">
+                        <span class="label-text">Nombre maximum de joueurs</span>
+                    </label>
+                    <input type="number" name="max_players" value="{{ game.max_players }}" min="2" max="10" class="input input-bordered w-full" required>
+                </div>
+
+                <div class="form-control">
+                    <label class="label">
+                        <span class="label-text">Nombre de manches</span>
+                    </label>
+                    <input type="number" name="rounds" value="{{ game.rounds }}" min="1" max="10" class="input input-bordered w-full" required>
+                </div>
+
+                <div class="form-control">
+                    <label class="label">
+                        <span class="label-text">Temps par manche (secondes)</span>
+                    </label>
+                    <input type="number" name="time_per_round" value="{{ game.time_per_round }}" min="30" max="300" step="30" class="input input-bordered w-full" required>
+                </div>
+
+                <div class="flex justify-end gap-4 mt-8">
+                    <a href="{{ url_for('waiting_room', game_code=game.code) }}" class="btn btn-outline">Annuler</a>
+                    <button type="submit" class="tiktok-button">Enregistrer les modifications</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %} 

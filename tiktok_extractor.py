@@ -13,7 +13,9 @@ from urllib.request import urlretrieve
 from datetime import datetime
 from selenium.webdriver.common.action_chains import ActionChains
 
-import undetected_chromedriver as uc
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -73,7 +75,7 @@ class TikTokExtractor:
     def setup_driver(self):
         """Configure le driver Chrome"""
         # Créer une nouvelle instance de ChromeOptions à chaque appel
-        options = uc.ChromeOptions()
+        options = Options()
         options.set_capability('goog:loggingPrefs', {'performance': 'ALL'})
         
         # Forcer le mode non-headless
@@ -91,36 +93,15 @@ class TikTokExtractor:
         
         logger.info("Initialisation du navigateur Chrome...")
         
-        # Forcer l'utilisation du chemin spécifique
-        driver_path = "/home/ubuntu/.local/share/undetected_chromedriver/undetected_adem"
-        logger.info(f"Utilisation forcée du chemin chromedriver: {driver_path}")
-        
         try:
-            # Utiliser directement le driver avec le chemin spécifié
-            self.driver = uc.Chrome(executable_path=driver_path, options=options)
+            # Utiliser le chromedriver standard
+            service = Service()
+            self.driver = webdriver.Chrome(service=service, options=options)
             self.driver.maximize_window()
             
-        except RuntimeError as e:
-            if "you cannot reuse the ChromeOptions object" in str(e):
-                logger.warning("Erreur de réutilisation des ChromeOptions, création d'une nouvelle instance...")
-                # Créer une nouvelle instance de ChromeOptions
-                new_options = uc.ChromeOptions()
-                new_options.set_capability('goog:loggingPrefs', {'performance': 'ALL'})
-                new_options.headless = False
-                new_options.add_argument('--no-sandbox')
-                new_options.add_argument('--disable-gpu')
-                new_options.add_argument('--disable-dev-shm-usage')
-                new_options.add_argument('--window-size=1920,1080')
-                new_options.add_argument('--disable-notifications')
-                new_options.add_argument('--display=:99')  # Spécifier l'affichage pour xvfb
-                new_options.add_argument('user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36')
-                
-                # Toujours utiliser le chemin forcé
-                self.driver = uc.Chrome(executable_path=driver_path, options=new_options)
-                self.driver.maximize_window()
-            else:
-                # Si c'est une autre erreur, la relancer
-                raise
+        except Exception as e:
+            logger.error(f"Erreur lors de l'initialisation du driver: {str(e)}")
+            raise
     
     def extract_user_info(self):
         """Récupère les informations utilisateur via l'API ou la page"""

@@ -166,8 +166,24 @@ def check_login_status():
             # Connecter l'utilisateur
             login_user(user)
             
-            # Toujours rediriger vers la page d'extraction pour première connexion ou non
-            # La redirection vers le Dashboard sera faite une fois l'extraction complétée
+            # Vérifier si l'utilisateur a déjà des vidéos
+            existing_videos = Video.query.filter_by(user_id=user.id).first()
+            
+            if existing_videos:
+                # Si l'utilisateur a déjà des vidéos, rediriger directement vers le dashboard
+                logger.info(f"Utilisateur {user.tiktok_username} a déjà des vidéos, redirection vers le dashboard")
+                return jsonify({
+                    'status': 'success',
+                    'message': 'User already has videos',
+                    'user': {
+                        'username': user.tiktok_username,
+                        'display_name': user.display_name,
+                        'avatar_url': user.avatar_url
+                    },
+                    'redirect': url_for('dashboard')
+                })
+            
+            # Si pas de vidéos, continuer avec l'extraction
             logger.info("Connexion réussie, préparation pour l'extraction des vidéos")
             
             return jsonify({
@@ -711,6 +727,33 @@ def create_game():
     
     return render_template('create_game.html')
 
+@app.route('/edit_game/<game_code>', methods=['GET', 'POST'])
+@login_required
+def edit_game(game_code):
+    game = Game.query.filter_by(code=game_code).first_or_404()
+    
+    # Vérifier que l'utilisateur est le créateur de la partie
+    if game.creator_id != current_user.id:
+        flash("Vous n'êtes pas autorisé à modifier cette partie.", "error")
+        return redirect(url_for('dashboard'))
+    
+    if request.method == 'POST':
+        # Mettre à jour les paramètres de la partie
+        game.name = request.form.get('name', game.name)
+        game.max_players = int(request.form.get('max_players', game.max_players))
+        game.rounds = int(request.form.get('rounds', game.rounds))
+        game.time_per_round = int(request.form.get('time_per_round', game.time_per_round))
+        
+        try:
+            db.session.commit()
+            flash("Les paramètres de la partie ont été mis à jour.", "success")
+            return redirect(url_for('waiting_room', game_code=game.code))
+        except Exception as e:
+            db.session.rollback()
+            flash("Une erreur est survenue lors de la mise à jour de la partie.", "error")
+    
+    return render_template('edit_game.html', game=game)
+
 @app.route('/join_game', methods=['GET', 'POST'])
 @login_required
 def join_game():
@@ -1052,8 +1095,9 @@ def round_results(game_code, round_id):
     # Récupérer la vidéo
     video = Video.query.get(round.video_id)
     
-    # Récupérer le propriétaire de la vidéo
+    # Récupérer le propriétaire de la vidéo et son statut de joker
     video_owner = User.query.get(round.user_id)
+    video_owner_player = GamePlayer.query.filter_by(game_id=game.id, user_id=video_owner.id).first()
     
     return render_template(
         'round_results.html',
@@ -1062,7 +1106,8 @@ def round_results(game_code, round_id):
         votes=votes,
         players=players,
         video=video,
-        video_owner=video_owner
+        video_owner=video_owner,
+        video_owner_player=video_owner_player
     )
 
 @app.route('/game_results/<game_code>')
