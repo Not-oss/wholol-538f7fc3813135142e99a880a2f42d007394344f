@@ -34,7 +34,7 @@ Le jeu implémente un système d'authentification innovant utilisant des QR code
 5. L'application récupère les données du profil TikTok et les vidéos likées
 6. L'utilisateur est automatiquement connecté à l'application web
 
-Ce système permet d'éviter de stocker les identifiants TikTok et d'accéder facilement aux vidéos likées par l'utilisateur, en utilisant un navigateur automatisé (undetected_chromedriver) qui simule l'authentification TikTok et extrait les cookies de session nécessaires.
+Ce système permet d'éviter de stocker les identifiants TikTok et d'accéder facilement aux vidéos likées par l'utilisateur, en utilisant un navigateur automatisé (Selenium WebDriver) qui simule l'authentification TikTok et extrait les cookies de session nécessaires.
 
 ### Modes de connexion
 
@@ -51,76 +51,9 @@ Choisissez le mode qui convient le mieux à votre environnement et à vos ressou
 
 - Python 3.8+
 - Chrome ou Chromium
+- ChromeDriver (compatible avec votre version de Chrome)
 - Pip
 
 ### Installation des dépendances
 
-```bash
-pip install -r requirements.txt
 ```
-
-### Configuration
-
-Créez un fichier `.env` à la racine du projet avec les variables suivantes :
-
-```
-SECRET_KEY=votre_clef_secrete
-RAPIDAPI_KEY=votre_clef_api_rapidapi
-```
-
-### Installation sur Ubuntu
-
-Pour installer et configurer l'application sur Ubuntu, suivez ces étapes:
-
-1. Clonez le dépôt:
-```bash
-git clone <url_du_repo>
-cd <nom_du_repo>
-```
-
-2. Exécutez le script de configuration:
-```bash
-chmod +x setup_ubuntu.sh
-./setup_ubuntu.sh
-```
-
-3. Lancez l'application:
-```bash
-chmod +x run.sh
-./run.sh
-```
-
-L'application sera disponible à l'adresse http://localhost:5000
-
-### Installation sur Windows
-
-```bash
-pip install -r requirements.txt
-python app.py
-```
-
-L'application sera disponible à l'adresse http://localhost:5000
-
-## Structure du projet
-
-- `app.py` : Point d'entrée de l'application Flask
-- `models.py` : Modèles de données SQLAlchemy
-- `config.py` : Configuration de l'application
-- `tiktok_extractor.py` : Système d'extraction des données TikTok
-- `ttdownloader.py` : Module de téléchargement des vidéos TikTok
-- `utils.py` : Utilitaires divers
-- `templates/` : Templates HTML
-- `static/` : Fichiers statiques (CSS, JS, images)
-- `temp_data/` : Dossier temporaire pour les QR codes et données extraites
-
-## Captures d'écran
-
-*À venir*
-
-## Licence
-
-Ce projet est sous licence MIT. Voir le fichier LICENSE pour plus de détails.
-
-## Avertissement
-
-Ce projet n'est pas affilié à TikTok. Il utilise l'API publique de TikTok et des techniques de web scraping pour accéder aux données publiques. Utilisez-le de manière responsable et conformément aux conditions d'utilisation de TikTok. 

@@ -1260,4 +1260,4 @@ if __name__ == '__main__':
     print(f"Application accessible à l'adresse: http://{local_ip}:5000")
     
     # Lancer l'application sur toutes les interfaces (0.0.0.0)
-    socketio.run(app, debug=True, host='0.0.0.0', port=7777) 
+    socketio.run(app, debug=True, host='0.0.0.0', port=5000) 
