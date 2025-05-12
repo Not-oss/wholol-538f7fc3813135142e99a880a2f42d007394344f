@@ -1257,7 +1257,7 @@ if __name__ == '__main__':
     # Récupérer l'adresse IP locale
     hostname = socket.gethostname()
     local_ip = socket.gethostbyname(hostname)
-    print(f"Application accessible à l'adresse: http://{local_ip}:8080")
+    print(f"Application accessible à l'adresse: http://{local_ip}:7777")
     
     # Lancer l'application sur toutes les interfaces (0.0.0.0)
-    socketio.run(app, debug=True, host='0.0.0.0', port=7777) 
+    socketio.run(app, debug=True, host='0.0.0.0', port=7777, allow_unsafe_werkzeug=True) 
