@@ -13,9 +13,7 @@ from urllib.request import urlretrieve
 from datetime import datetime
 from selenium.webdriver.common.action_chains import ActionChains
 
-from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.chrome.options import Options
+import undetected_chromedriver as uc
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -75,7 +73,7 @@ class TikTokExtractor:
     def setup_driver(self):
         """Configure le driver Chrome"""
         # Créer une nouvelle instance de ChromeOptions à chaque appel
-        options = Options()
+        options = uc.ChromeOptions()
         
         # Configuration minimale
         options.add_argument('--no-sandbox')
@@ -85,13 +83,8 @@ class TikTokExtractor:
         logger.info("Initialisation du navigateur Chrome...")
         
         try:
-            # Utiliser le chromedriver local
-            chromedriver_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'chromedriver')
-            if platform.system() == 'Windows':
-                chromedriver_path += '.exe'
-            
-            service = Service(executable_path=chromedriver_path)
-            self.driver = webdriver.Chrome(service=service, options=options)
+            # Utiliser undetected_chromedriver
+            self.driver = uc.Chrome(options=options)
             self.driver.maximize_window()
             
         except Exception as e:
