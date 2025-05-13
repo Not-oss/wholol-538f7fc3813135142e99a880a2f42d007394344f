@@ -78,9 +78,9 @@ class TikTokExtractor:
         options = Options()
         
         # Configuration minimale
-        options.add_argument('--headless')
         options.add_argument('--no-sandbox')
         options.add_argument('--disable-dev-shm-usage')
+        options.add_argument('--display=:98')  # Spécifier l'affichage pour xvfb
         
         logger.info("Initialisation du navigateur Chrome...")
         
