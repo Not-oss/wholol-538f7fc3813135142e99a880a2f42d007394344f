@@ -13,4 +13,4 @@ pyzbar==0.1.9
 httpx==0.25.1
 python-engineio==4.8.0
 python-socketio==5.10.0
-eventlet==0.33.3 
+gevent-websocket==0.10.1 

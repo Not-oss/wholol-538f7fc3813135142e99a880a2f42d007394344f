@@ -76,26 +76,11 @@ class TikTokExtractor:
         """Configure le driver Chrome"""
         # Créer une nouvelle instance de ChromeOptions à chaque appel
         options = Options()
-        options.set_capability('goog:loggingPrefs', {'performance': 'ALL'})
         
-        # Forcer le mode non-headless
-        options.headless = False
-        logger.info("Mode headless: désactivé (forcé)")
-        
-        # Configuration standard
+        # Configuration minimale
+        options.add_argument('--headless')
         options.add_argument('--no-sandbox')
-        options.add_argument('--disable-gpu')
         options.add_argument('--disable-dev-shm-usage')
-        options.add_argument('--window-size=1920,1080')
-        options.add_argument('--disable-notifications')
-        options.add_argument('--display=:99')  # Spécifier l'affichage pour xvfb
-        options.add_argument('--remote-debugging-port=9222')  # Ajout du port de débogage
-        options.add_argument('--disable-web-security')  # Désactiver la sécurité web
-        options.add_argument('--allow-running-insecure-content')  # Autoriser le contenu non sécurisé
-        options.add_argument('--disable-blink-features=AutomationControlled')  # Masquer l'automatisation
-        options.add_experimental_option('excludeSwitches', ['enable-automation'])  # Masquer l'automatisation
-        options.add_experimental_option('useAutomationExtension', False)  # Désactiver l'extension d'automatisation
-        options.add_argument('user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36')
         
         logger.info("Initialisation du navigateur Chrome...")
         
@@ -108,10 +93,6 @@ class TikTokExtractor:
             service = Service(executable_path=chromedriver_path)
             self.driver = webdriver.Chrome(service=service, options=options)
             self.driver.maximize_window()
-            
-            # Désactiver les logs de console
-            self.driver.execute_cdp_cmd('Network.setBypassServiceWorker', {'bypass': True})
-            self.driver.execute_cdp_cmd('Network.enable', {})
             
         except Exception as e:
             logger.error(f"Erreur lors de l'initialisation du driver: {str(e)}")
