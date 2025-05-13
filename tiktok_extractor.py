@@ -94,8 +94,12 @@ class TikTokExtractor:
         logger.info("Initialisation du navigateur Chrome...")
         
         try:
-            # Utiliser le chromedriver standard
-            service = Service()
+            # Utiliser le chromedriver local
+            chromedriver_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'chromedriver')
+            if platform.system() == 'Windows':
+                chromedriver_path += '.exe'
+            
+            service = Service(executable_path=chromedriver_path)
             self.driver = webdriver.Chrome(service=service, options=options)
             self.driver.maximize_window()
             
