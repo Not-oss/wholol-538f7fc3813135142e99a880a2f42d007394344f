@@ -83,8 +83,9 @@ class TikTokExtractor:
         logger.info("Initialisation du navigateur Chrome...")
         
         try:
-            # Utiliser undetected_chromedriver
-            self.driver = uc.Chrome(options=options)
+            # Utiliser le chromedriver spécifique
+            driver_path = "/home/ubuntu/.local/share/undetected_chromedriver/chromedriver_copy"
+            self.driver = uc.Chrome(driver_executable_path=driver_path, options=options)
             self.driver.maximize_window()
             
         except Exception as e:
