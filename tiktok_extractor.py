@@ -79,10 +79,11 @@ class TikTokExtractor:
         options.set_capability('goog:loggingPrefs', {'performance': 'ALL'})
         
         # Forcer le mode non-headless
-        options.headless = False
+        options.headless = True
         logger.info("Mode headless: désactivé (forcé)")
         
         # Configuration standard
+        options.add_argument('--headless')
         options.add_argument('--no-sandbox')
         options.add_argument('--disable-gpu')
         options.add_argument('--disable-dev-shm-usage')
