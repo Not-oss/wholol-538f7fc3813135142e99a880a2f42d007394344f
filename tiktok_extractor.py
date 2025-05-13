@@ -90,6 +90,7 @@ class TikTokExtractor:
         options.add_argument('--window-size=1920,1080')
         options.add_argument('--disable-notifications')
         options.add_argument('--display=:99')  # Spécifier l'affichage pour xvfb
+        options.add_argument('--remote-debugging-port=9222')  # Ajout du port de débogage
         options.add_argument('user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36')
         
         logger.info("Initialisation du navigateur Chrome...")
