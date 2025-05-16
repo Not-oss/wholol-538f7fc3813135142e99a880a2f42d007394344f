@@ -17,7 +17,7 @@ gevent==23.9.1
 gevent-websocket==0.10.1
 quart==0.19.4
 quart-sqlalchemy==0.19.0
-quart-login==0.7.0
+quart-auth==0.19.0
 quart-wtf==0.0.7
 quart-socketio==0.19.0
 undetected-chromedriver==3.5.4 
