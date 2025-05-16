@@ -1,7 +1,7 @@
 from quart import Quart, render_template, request, jsonify, redirect, url_for, flash, session
 from quart_sqlalchemy import SQLAlchemy
 from quart_auth import QuartAuth, login_required, current_user, login_user, logout_user
-from quart_wtf import FlaskForm
+from quart_wtf import QuartForm
 from wtforms import StringField, PasswordField, SubmitField
 from wtforms.validators import DataRequired, Email, Length
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -1251,6 +1251,11 @@ def handle_end_game(data):
 @app.context_processor
 def inject_now():
     return {'now': datetime.now()}
+
+class LoginForm(QuartForm):
+    email = StringField('Email', validators=[DataRequired(), Email()])
+    password = PasswordField('Password', validators=[DataRequired()])
+    submit = SubmitField('Sign In')
 
 if __name__ == '__main__':
     # Récupérer l'adresse IP locale
