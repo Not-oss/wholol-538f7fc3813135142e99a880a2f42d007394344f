@@ -1,5 +1,5 @@
 SQLAlchemy
-Werkzeug
+Werkzeug==2.2.2
 python-dotenv
 requests
 playwright
