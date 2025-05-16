@@ -1,29 +1,31 @@
-import os
-from flask import Flask, render_template, redirect, url_for, request, jsonify, session, flash, Response
-from flask_socketio import SocketIO, emit, join_room, leave_room
-from flask_login import LoginManager, current_user, login_user, logout_user, login_required
+from quart import Quart, render_template, request, jsonify, redirect, url_for, flash, session
+from quart_sqlalchemy import SQLAlchemy
+from quart_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
+from quart_wtf import FlaskForm
+from wtforms import StringField, PasswordField, SubmitField
+from wtforms.validators import DataRequired, Email, Length
 from werkzeug.security import generate_password_hash, check_password_hash
-import secrets
+from quart_socketio import SocketIO
+from dotenv import load_dotenv
+import os
 import json
-import logging
 from datetime import datetime, timedelta
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-import time
-import socket
+import requests
+from tiktok_extractor import TikTokExtractor
+import logging
+from logging.handlers import RotatingFileHandler
+import sys
 from gevent import monkey
 monkey.patch_all()
 
 from models import db, User, Game, GamePlayer, Video, Round, Vote
-from tiktok_extractor import TikTokExtractor, logger
 from config import Config
 
 # Variable globale pour l'extracteur TikTok
 current_extractor = None
 
 # Initialisation de l'application
-app = Flask(__name__)
+app = Quart(__name__)
 app.config.from_object(Config)
 app.config['SECRET_KEY'] = 'your-secret-key'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///tiktok_game.db'
@@ -67,7 +69,7 @@ def logout():
     return redirect(url_for('index'))
 
 @app.route('/qr_login')
-def qr_login():
+async def qr_login():
     try:
         # Initialiser l'extracteur TikTok
         extractor = TikTokExtractor(output_dir="temp_data")
@@ -77,19 +79,19 @@ def qr_login():
         
         # Lancer le navigateur et capturer le QR code
         logger.info("Tentative d'initialisation du navigateur...")
-        if not extractor.setup_driver():
+        if not await extractor.setup_driver():
             raise Exception("Échec de l'initialisation du navigateur")
         
         # Accéder à la page de login TikTok
         logger.info("Accès à la page de login TikTok...")
-        extractor.page.goto("https://www.tiktok.com/login/qrcode?redirect_url=https://www.tiktok.com/")
+        await extractor.page.goto("https://www.tiktok.com/login/qrcode?redirect_url=https://www.tiktok.com/")
         
         # Attendre que la page charge
-        extractor.page.wait_for_load_state('networkidle')
+        await extractor.page.wait_for_load_state('networkidle')
         
         # Capturer le QR code
         logger.info("Capture du QR code...")
-        if not extractor.capture_qr_code():
+        if not await extractor.capture_qr_code():
             raise Exception("Échec de la capture du QR code")
         
         # Stocker l'extracteur dans une variable globale

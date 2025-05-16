@@ -10,9 +10,10 @@ import random
 import platform
 from urllib.request import urlretrieve
 from datetime import datetime
-from playwright.sync_api import sync_playwright, Page, Browser
+from playwright.async_api import async_playwright, Page, Browser
 from PIL import Image
 from pyzbar.pyzbar import decode
+import asyncio
 
 # Configuration du logging
 logging.basicConfig(
