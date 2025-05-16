@@ -1,22 +1,41 @@
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
 from datetime import datetime
+from quart_auth import AuthUser
 
 db = SQLAlchemy()
 
-class User(db.Model, UserMixin):
+class User(AuthUser, db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    tiktok_id = db.Column(db.String(50), unique=True)
-    tiktok_username = db.Column(db.String(50), unique=True)
-    display_name = db.Column(db.String(100))
-    avatar_url = db.Column(db.String(255))
-    email = db.Column(db.String(100))
+    tiktok_username = db.Column(db.String(80), unique=True, nullable=False)
+    tiktok_id = db.Column(db.String(80), unique=True)
+    display_name = db.Column(db.String(80))
+    avatar_url = db.Column(db.String(200))
+    email = db.Column(db.String(120), unique=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
-    # Relations
+    # Relation avec les vidéos
     videos = db.relationship('Video', backref='user', lazy=True)
-    created_games = db.relationship('Game', backref='creator', lazy=True, foreign_keys='Game.creator_id')
     
+    # Relation avec les parties
+    games_created = db.relationship('Game', backref='creator', lazy=True, foreign_keys='Game.creator_id')
+    games_played = db.relationship('GamePlayer', backref='user', lazy=True)
+    
+    def get_id(self):
+        return str(self.id)
+    
+    @property
+    def is_active(self):
+        return True
+    
+    @property
+    def is_authenticated(self):
+        return True
+    
+    @property
+    def is_anonymous(self):
+        return False
+
     def __repr__(self):
         return f'<User {self.tiktok_username}>'
 

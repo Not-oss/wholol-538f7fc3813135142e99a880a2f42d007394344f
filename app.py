@@ -1,6 +1,6 @@
 from quart import Quart, render_template, request, jsonify, redirect, url_for, flash, session
 from quart_sqlalchemy import SQLAlchemy
-from quart_auth import AuthManager, login_required, current_user, login_user, logout_user
+from quart_auth import QuartAuth, login_required, current_user, login_user, logout_user
 from quart_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField
 from wtforms.validators import DataRequired, Email, Length
@@ -36,9 +36,9 @@ app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=30)
 db.init_app(app)
 
 # Configuration de Flask-Login
-auth_manager = AuthManager()
-auth_manager.init_app(app)
-auth_manager.login_view = 'login'
+auth = QuartAuth()
+auth.init_app(app)
+auth.login_view = 'login'
 
 # Configuration de Flask-SocketIO
 socketio = SocketIO(app, cors_allowed_origins="*", async_mode='gevent')
@@ -47,7 +47,7 @@ socketio = SocketIO(app, cors_allowed_origins="*", async_mode='gevent')
 with app.app_context():
     db.create_all()
 
-@auth_manager.user_loader
+@auth.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
 
