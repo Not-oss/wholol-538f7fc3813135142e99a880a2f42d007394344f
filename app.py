@@ -12,6 +12,8 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import time
 import socket
+from gevent import monkey
+monkey.patch_all()
 
 from models import db, User, Game, GamePlayer, Video, Round, Vote
 from tiktok_extractor import TikTokExtractor, logger
@@ -37,7 +39,7 @@ login_manager.init_app(app)
 login_manager.login_view = 'login'
 
 # Configuration de Flask-SocketIO
-socketio = SocketIO(app, cors_allowed_origins="*")
+socketio = SocketIO(app, cors_allowed_origins="*", async_mode='gevent')
 
 # Création des tables de la base de données
 with app.app_context():
