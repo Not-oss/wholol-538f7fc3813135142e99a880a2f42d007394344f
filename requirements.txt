@@ -14,5 +14,5 @@ quart
 quart-sqlalchemy
 quart-auth
 quart-wtf
-quart-socketio
+Flask-SocketIO
 undetected-chromedriver 

@@ -5,7 +5,7 @@ from quart_wtf import QuartForm
 from wtforms import StringField, PasswordField, SubmitField
 from wtforms.validators import DataRequired, Email, Length
 from werkzeug.security import generate_password_hash, check_password_hash
-from quart_socketio import SocketIO
+from flask_socketio import SocketIO
 from dotenv import load_dotenv
 import os
 import json
@@ -1259,9 +1259,10 @@ class LoginForm(QuartForm):
 
 if __name__ == '__main__':
     # Récupérer l'adresse IP locale
+    import socket
     hostname = socket.gethostname()
     local_ip = socket.gethostbyname(hostname)
     print(f"Application accessible à l'adresse: http://{local_ip}:7777")
     
-    # Lancer l'application sur toutes les interfaces (0.0.0.0)
-    socketio.run(app, debug=True, host='0.0.0.0', port=7777, allow_unsafe_werkzeug=True) 
+    # Démarrer le serveur avec l'adresse IP locale
+    socketio.run(app, host=local_ip, port=5000, debug=True) 
