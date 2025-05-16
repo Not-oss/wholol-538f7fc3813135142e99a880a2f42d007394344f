@@ -50,9 +50,12 @@ class TikTokExtractor:
     def setup_driver(self):
         """Initialise le navigateur Playwright avec les options nécessaires"""
         try:
+            # Configurer le display pour Xvfb
+            os.environ['DISPLAY'] = ':99'
+            
             playwright = sync_playwright().start()
             self.browser = playwright.chromium.launch(
-                headless=False,
+                headless=False,  # Mode headed activé
                 args=[
                     '--no-sandbox',
                     '--disable-setuid-sandbox',
@@ -60,6 +63,7 @@ class TikTokExtractor:
                     '--disable-accelerated-2d-canvas',
                     '--disable-gpu',
                     '--window-size=1920,1080',
+                    '--display=:99'
                 ]
             )
             
