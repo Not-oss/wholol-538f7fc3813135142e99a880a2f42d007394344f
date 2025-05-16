@@ -7,11 +7,7 @@ SQLAlchemy==2.0.23
 Werkzeug==2.3.7
 python-dotenv==1.0.0
 requests==2.31.0
-<<<<<<< HEAD
 playwright==1.41.2
-=======
-selenium==4.15.2
->>>>>>> cb9e1ec4e4a37b68802fff0fac525f09958ab7a3
 Pillow==10.1.0
 pyzbar==0.1.9
 httpx==0.25.1
